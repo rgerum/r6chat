@@ -34,6 +34,15 @@ export const addChat = mutation({
     if (!userId) {
       throw new Error("Not logged in");
     }
+    // if the newest chat is still empty, use this as a new chat
+    const chat = await ctx.db
+      .query("chats")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .order("desc")
+      .first();
+    if (chat && chat.messages.length == 0) {
+      return chat._id;
+    }
     return await ctx.db.insert("chats", {
       userId,
       title,

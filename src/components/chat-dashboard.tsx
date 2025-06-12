@@ -11,11 +11,13 @@ function Chats() {
   if (!chats) return null;
   return (
     <ul>
-      {chats.map((chat) => (
-        <li key={chat._id}>
-          <Link href={`/chat/${chat._id}`}>{chat.title}</Link>
-        </li>
-      ))}
+      {chats
+        .filter((chat) => chat.messages.length > 0)
+        .map((chat) => (
+          <li key={chat._id}>
+            <Link href={`/chat/${chat._id}`}>{chat.title}</Link>
+          </li>
+        ))}
     </ul>
   );
 }
@@ -72,11 +74,11 @@ export default function ChatDashboard(props: { chatId?: string }) {
 
   return (
     <>
-      <button onClick={() => addChat({ title: "New Chat" })}>Add Chat</button>
+      <Link href="/">Add Chat</Link>
       <Chats />
       {props.chatId && (
         <ChatHistoryWrapper chatId={props.chatId as Id<"chats">} />
-      )}{" "}
+      )}
     </>
   );
 }
