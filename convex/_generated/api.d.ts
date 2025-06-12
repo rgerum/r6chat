@@ -9,9 +9,11 @@
  */
 
 import type * as chat from "../chat.js";
+import type * as chats from "../chats.js";
 import type * as http from "../http.js";
 import type * as messages from "../messages.js";
 import type * as streaming from "../streaming.js";
+import type * as user from "../user.js";
 
 import type {
   ApiFromModules,
@@ -29,9 +31,11 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   chat: typeof chat;
+  chats: typeof chats;
   http: typeof http;
   messages: typeof messages;
   streaming: typeof streaming;
+  user: typeof user;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 
