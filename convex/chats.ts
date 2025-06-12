@@ -26,6 +26,16 @@ export const getChat = query({
   },
 });
 
+export const getChatTitle = query({
+  args: {
+    chatId: v.id("chats"),
+  },
+  handler: async (ctx, args) => {
+    const chat = await ctx.db.get(args.chatId);
+    return chat?.title;
+  },
+});
+
 export const addChat = mutation({
   args: {},
   handler: async (ctx) => {
@@ -67,6 +77,30 @@ export const addMessageToChat = mutation({
       throw new Error("Not your chat");
     }
     chat.messages = messages;
+    chat.lastUpdate = Date.now();
+    await ctx.db.patch(chatId, chat);
+    return chat;
+  },
+});
+
+export const addTitleToChat = mutation({
+  args: {
+    chatId: v.id("chats"),
+    title: v.string(),
+  },
+  handler: async (ctx, { chatId, title }) => {
+    const userId = await getUserIdOrThrow(ctx);
+    if (!userId) {
+      throw new Error("Not logged in");
+    }
+    let chat = await ctx.db.get(chatId);
+    if (!chat) {
+      throw new Error("Chat not found");
+    }
+    if (chat.userId !== userId) {
+      throw new Error("Not your chat");
+    }
+    chat.title = title;
     chat.lastUpdate = Date.now();
     await ctx.db.patch(chatId, chat);
     return chat;
