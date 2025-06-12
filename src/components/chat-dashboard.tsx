@@ -53,23 +53,29 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
   );
 }
 
-export default function ChatDashboard(props: { chatId?: string }) {
+function ChatHistoryWrapper(props: { chatId: Id<"chats"> }) {
   const chatHistory = useQuery(api.chats.getChat, {
-    chatId: props.chatId as Id<"chats">,
+    chatId: props.chatId,
   });
+  return (
+    <ChatText
+      chatId={props.chatId as Id<"chats">}
+      initialMessages={chatHistory?.messages.map(
+        (m) => JSON.parse(m) as Message,
+      )}
+    />
+  );
+}
+
+export default function ChatDashboard(props: { chatId?: string }) {
   const addChat = useMutation(api.chats.addChat);
 
   return (
     <>
       <button onClick={() => addChat({ title: "New Chat" })}>Add Chat</button>
       <Chats />
-      {chatHistory && (
-        <ChatText
-          chatId={props.chatId as Id<"chats">}
-          initialMessages={chatHistory?.messages.map(
-            (m) => JSON.parse(m) as Message,
-          )}
-        />
+      {props.chatId && (
+        <ChatHistoryWrapper chatId={props.chatId as Id<"chats">} />
       )}{" "}
     </>
   );
