@@ -104,7 +104,6 @@ import { Message } from "ai";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { getAuthToken } from "@/app/auth";
-import { getChatTitle } from "../../../../convex/chats";
 
 export async function saveTitle({
   id,
