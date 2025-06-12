@@ -12,6 +12,7 @@ export const getChats = query({
     return await ctx.db
       .query("chats")
       .withIndex("by_user", (q) => q.eq("userId", userId))
+      .order("desc")
       .collect();
   },
 });
@@ -26,10 +27,8 @@ export const getChat = query({
 });
 
 export const addChat = mutation({
-  args: {
-    title: v.string(),
-  },
-  handler: async (ctx, { title }) => {
+  args: {},
+  handler: async (ctx) => {
     const userId = await getUserIdOrThrow(ctx);
     if (!userId) {
       throw new Error("Not logged in");
@@ -45,7 +44,6 @@ export const addChat = mutation({
     }
     return await ctx.db.insert("chats", {
       userId,
-      title,
       messages: [],
     });
   },
@@ -63,20 +61,13 @@ export const addMessageToChat = mutation({
     }
     let chat = await ctx.db.get(chatId);
     if (!chat) {
-      const chatId = await ctx.db.insert("chats", {
-        userId,
-        title: "New Chat",
-        messages: [],
-      });
-      chat = await ctx.db.get(chatId);
-    }
-    if (!chat) {
       throw new Error("Chat not found");
     }
     if (chat.userId !== userId) {
       throw new Error("Not your chat");
     }
     chat.messages = messages;
+    chat.lastUpdate = Date.now();
     await ctx.db.patch(chatId, chat);
     return chat;
   },

@@ -7,7 +7,7 @@ import { getAuthToken } from "@/app/auth";
 export default async function Page() {
   const id = await fetchMutation(
     api.chats.addChat,
-    { title: "New Chat" },
+    {},
     {
       token: await getAuthToken(),
     },
