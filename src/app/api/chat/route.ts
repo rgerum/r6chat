@@ -4,6 +4,7 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 export const maxDuration = 30;
 
 import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import {
   appendResponseMessages,
   FilePart,
@@ -46,10 +47,25 @@ function getText(
   }
 }
 
+function getModelInstance(model: string) {
+  switch (model) {
+    case "gpt-4":
+      return openai("gpt-4");
+    case "gpt-4o":
+      return openai("gpt-4o");
+    case "gpt-4o-mini":
+      return openai("gpt-4o-mini");
+    case "gemini-2.5-flash-preview-05-20":
+      return google("gemini-2.5-flash-preview-05-20");
+  }
+}
+
 export async function POST(req: Request) {
-  const { messages, id } = await req.json();
+  const { messages, id, model } = await req.json();
 
   const token = await getAuthToken();
+
+  console.log("model", model);
 
   if (!token) {
     return new Response("Unauthorized", { status: 401 });
@@ -64,6 +80,9 @@ export async function POST(req: Request) {
       token,
     },
   );
+
+  const modelInstance = await getModelInstance(model);
+  if (!modelInstance) throw new Error("model not found");
 
   if (!title) {
     const result = streamText({
@@ -83,7 +102,7 @@ export async function POST(req: Request) {
   }
 
   const result = streamText({
-    model: openai("gpt-4o-mini"),
+    model: modelInstance,
     messages,
     async onFinish({ response }) {
       await saveChat({

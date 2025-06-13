@@ -15,6 +15,7 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
+import { ScrollToBottomBox } from "@/components/scroll-box";
 
 // First, let's define a type for our chat object
 type Chat = {
@@ -64,7 +65,7 @@ function groupChats(chats: Chat[]) {
   return groupedChats;
 }
 
-function Chats() {
+function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
   const chats = useQuery(api.chats.getChats);
   if (!chats) return null;
 
@@ -81,9 +82,10 @@ function Chats() {
               <li key={chat._id} className="w-full">
                 <Link
                   href={`/chat/${chat._id}`}
-                  className={
-                    "py-2 px-3 hover:bg-pink-300 truncate w-full block rounded-md"
-                  }
+                  className={cn(
+                    "py-2 px-3 hover:bg-pink-300 truncate w-full block rounded-md",
+                    chat._id === currentChatId && "bg-pink-300",
+                  )}
                 >
                   {chat.title || "..."}
                 </Link>
@@ -97,16 +99,18 @@ function Chats() {
 }
 
 function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
+  const [model, setModel] = React.useState("gemini-2.5-flash-preview-05-20");
   const { messages, input, handleInputChange, handleSubmit } = useChat({
     id: props.chatId,
     initialMessages: props.initialMessages,
     sendExtraMessageFields: true,
+    body: { model },
   });
 
   return (
     <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
       {messages.map((message) => (
-        <div key={message.id} className="">
+        <React.Fragment key={message.id}>
           {message.parts.map((part, i) => {
             switch (part.type) {
               case "text":
@@ -116,7 +120,7 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
                     className={cn(
                       "mb-8 prose",
                       message.role === "user"
-                        ? "bg-pink-200 rounded-md p-3 ml-30"
+                        ? "bg-pink-200 rounded-md p-3 ml-auto max-w-80 w-fit"
                         : "",
                     )}
                   >
@@ -125,7 +129,7 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
                 );
             }
           })}
-        </div>
+        </React.Fragment>
       ))}
 
       <form
@@ -138,8 +142,50 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
           placeholder="Say something..."
           onChange={handleInputChange}
         />
+        <SelectScrollable model={model} setModel={setModel} />
       </form>
     </div>
+  );
+}
+
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import React, { Fragment } from "react";
+
+export function SelectScrollable({
+  model,
+  setModel,
+}: {
+  model: string;
+  setModel: (model: string) => void;
+}) {
+  return (
+    <Select value={model} onValueChange={setModel}>
+      <SelectTrigger className="w-[280px]">
+        <SelectValue placeholder="Select a timezone" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>OpenAI</SelectLabel>
+          <SelectItem value="gpt-4">gpt-4</SelectItem>
+          <SelectItem value="gpt-4o">gpt-4o</SelectItem>
+          <SelectItem value="gpt-4o-mini">gpt-4o-mini</SelectItem>
+        </SelectGroup>
+        <SelectGroup>
+          <SelectLabel>Gemini</SelectLabel>
+          <SelectItem value="gemini-2.5-flash-preview-05-20">
+            gemini-2.5-flash-preview-05-20
+          </SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -166,7 +212,7 @@ export default function ChatDashboard(props: { chatId?: string }) {
         <Button asChild className={"bg-pink-300 text-center text-white"}>
           <Link href="/">New Chat</Link>
         </Button>
-        <Chats />
+        <Chats currentChatId={props.chatId as Id<"chats">} />
 
         <footer className="mt-auto">
           <SignedOut>
