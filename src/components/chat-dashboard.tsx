@@ -1,6 +1,7 @@
 "use client";
 
 import { Message, useChat } from "@ai-sdk/react";
+import ReactMarkdown from "react-markdown";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import Link from "next/link";
@@ -105,7 +106,7 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
   return (
     <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
       {messages.map((message) => (
-        <div key={message.id} className="whitespace-pre-wrap">
+        <div key={message.id} className="">
           {message.parts.map((part, i) => {
             switch (part.type) {
               case "text":
@@ -113,13 +114,13 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
                   <div
                     key={`${message.id}-${i}`}
                     className={cn(
-                      "mb-8",
+                      "mb-8 prose",
                       message.role === "user"
                         ? "bg-pink-200 rounded-md p-3 ml-30"
                         : "",
                     )}
                   >
-                    {part.text}
+                    <ReactMarkdown>{part.text}</ReactMarkdown>
                   </div>
                 );
             }
