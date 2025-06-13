@@ -170,6 +170,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { models_definitions } from "@/lib/model-definitions";
 
 export function SelectScrollable({
   model,
@@ -184,18 +185,16 @@ export function SelectScrollable({
         <SelectValue placeholder="Select a timezone" />
       </SelectTrigger>
       <SelectContent>
-        <SelectGroup>
-          <SelectLabel>OpenAI</SelectLabel>
-          <SelectItem value="gpt-4">gpt-4</SelectItem>
-          <SelectItem value="gpt-4o">gpt-4o</SelectItem>
-          <SelectItem value="gpt-4o-mini">gpt-4o-mini</SelectItem>
-        </SelectGroup>
-        <SelectGroup>
-          <SelectLabel>Gemini</SelectLabel>
-          <SelectItem value="gemini-2.5-flash-preview-05-20">
-            gemini-2.5-flash-preview-05-20
-          </SelectItem>
-        </SelectGroup>
+        {models_definitions.map((definition) => (
+          <SelectGroup key={definition.label}>
+            <SelectLabel>{definition.label}</SelectLabel>
+            {definition.options.map((model) => (
+              <SelectItem key={model.value} value={model.value}>
+                {model.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        ))}
       </SelectContent>
     </Select>
   );

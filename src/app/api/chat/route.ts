@@ -4,7 +4,6 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 export const maxDuration = 30;
 
 import { openai } from "@ai-sdk/openai";
-import { google } from "@ai-sdk/google";
 import {
   appendResponseMessages,
   FilePart,
@@ -47,19 +46,6 @@ function getText(
   }
 }
 
-function getModelInstance(model: string) {
-  switch (model) {
-    case "gpt-4":
-      return openai("gpt-4");
-    case "gpt-4o":
-      return openai("gpt-4o");
-    case "gpt-4o-mini":
-      return openai("gpt-4o-mini");
-    case "gemini-2.5-flash-preview-05-20":
-      return google("gemini-2.5-flash-preview-05-20");
-  }
-}
-
 export async function POST(req: Request) {
   const { messages, id, model } = await req.json();
 
@@ -81,7 +67,7 @@ export async function POST(req: Request) {
     },
   );
 
-  const modelInstance = await getModelInstance(model);
+  const modelInstance = getModelInstance(model);
   if (!modelInstance) throw new Error("model not found");
 
   if (!title) {
@@ -123,6 +109,7 @@ import { Message } from "ai";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { getAuthToken } from "@/app/auth";
+import { getModelInstance } from "@/lib/model-instance";
 
 export async function saveTitle({
   id,
