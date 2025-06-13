@@ -15,7 +15,7 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
-import { ScrollToBottomBox } from "@/components/scroll-box";
+import React from "react";
 
 // First, let's define a type for our chat object
 type Chat = {
@@ -107,8 +107,21 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
     body: { model },
   });
 
+  React.useEffect(() => {
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth", // Optional: adds smooth scrolling
+    });
+  }, [
+    messages
+      .map((m) =>
+        m.parts.map((p) => (p.type === "text" ? p.text : "")).join(""),
+      )
+      .join(""),
+  ]);
+
   return (
-    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+    <div className="flex flex-col w-full max-w-lg py-24 mx-auto stretch">
       {messages.map((message) => (
         <React.Fragment key={message.id}>
           {message.parts.map((part, i) => {
@@ -134,7 +147,7 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
 
       <form
         onSubmit={handleSubmit}
-        className="fixed bottom-0 w-full max-w-md border-5 border-b-0 border-pink-500 rounded-t-md bg-pink-100"
+        className="box-content -ml-3 fixed bottom-0 w-full max-w-lg border-10 border-b-0 border-pink-100 rounded-t-md bg-pink-50"
       >
         <input
           className=" w-full p-2 mb-8"
@@ -157,7 +170,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import React, { Fragment } from "react";
 
 export function SelectScrollable({
   model,
