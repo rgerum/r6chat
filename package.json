@@ -20,6 +20,7 @@
     "@ai-sdk/react": "^1.2.12",
     "@clerk/nextjs": "^6.21.0",
     "@convex-dev/persistent-text-streaming": "^0.2.3",
+    "@icons-pack/react-simple-icons": "^13.1.0",
     "@radix-ui/react-scroll-area": "^1.2.9",
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.3",

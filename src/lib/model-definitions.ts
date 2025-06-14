@@ -1,8 +1,15 @@
+import {
+  SiAnthropic,
+  SiGooglegemini,
+  SiOpenai,
+} from "@icons-pack/react-simple-icons";
+
 export const models_definitions = [
   {
     // https://platform.openai.com/docs/models
     label: "OpenAI",
     provider: "openai",
+    icon: SiOpenai,
     options: [
       { value: "gpt-4", label: "gpt-4" },
       { value: "gpt-4o", label: "gpt-4o" },
@@ -13,6 +20,7 @@ export const models_definitions = [
     // https://ai.google.dev/gemini-api/docs/models
     label: "Gemini",
     provider: "google",
+    icon: SiGooglegemini,
     options: [
       { value: "gemini-2.5-flash-preview-05-20", label: "Gemini 2.5 Flash" },
       { value: "gemini-2.5-pro-preview-06-05", label: "Gemini 2.5 Pro" },
@@ -27,6 +35,7 @@ export const models_definitions = [
     // https://docs.anthropic.com/en/docs/about-claude/models/overview
     label: "Anthropic",
     provider: "anthropic",
+    icon: SiAnthropic,
     options: [
       { value: "claude-sonnet-4-20250514", label: "Claude Sonnet 4" },
       {
