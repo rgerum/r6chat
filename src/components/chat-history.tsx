@@ -16,7 +16,7 @@ import {
 import { models_definitions } from "@/lib/model-definitions";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
-import { ArrowUpIcon, LucideIcon } from "lucide-react";
+import { ArrowUpIcon, LucideIcon, SquareIcon } from "lucide-react";
 import { IconType } from "@icons-pack/react-simple-icons";
 import { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -39,12 +39,13 @@ export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
 
 function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
   const [model, setModel] = React.useState("gpt-4o-mini");
-  const { messages, input, handleInputChange, handleSubmit } = useChat({
-    id: props.chatId,
-    initialMessages: props.initialMessages,
-    sendExtraMessageFields: true,
-    body: { model },
-  });
+  const { messages, input, handleInputChange, handleSubmit, status, stop } =
+    useChat({
+      id: props.chatId,
+      initialMessages: props.initialMessages,
+      sendExtraMessageFields: true,
+      body: { model },
+    });
 
   const addChat = useMutation(api.chats.addChat);
   const router = useRouter();
@@ -72,7 +73,13 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
         m.parts.map((p) => (p.type === "text" ? p.text : "")).join(""),
       )
       .join(""),
+    status,
   ]);
+
+  function handleStop(e: { preventDefault: () => void }) {
+    e.preventDefault();
+    stop();
+  }
 
   return (
     <div className="flex flex-col w-full max-w-lg py-24 mx-auto stretch">
@@ -98,9 +105,19 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
           })}
         </React.Fragment>
       ))}
+      {status === "submitted" && (
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-pink-600" />
+        </div>
+      )}
+      <div className={"h-10"} />
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={
+          status === "submitted" || status === "streaming"
+            ? handleStop
+            : handleSubmit
+        }
         className="box-content p-4 pb-2 -ml-3 fixed bottom-0 w-full max-w-lg border-10 border-b-0 border-pink-100 rounded-t-md bg-pink-50"
       >
         <div className="flex flex-grow flex-row items-start mb-2">
@@ -122,7 +139,11 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
         <div className="flex gap-2">
           <SelectModel model={model} setModel={setModel} />
           <Button type="submit" className={"ml-auto"}>
-            <ArrowUpIcon />
+            {status === "ready" || status === "error" ? (
+              <ArrowUpIcon />
+            ) : (
+              <SquareIcon />
+            )}
           </Button>
         </div>
       </form>

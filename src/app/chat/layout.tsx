@@ -4,11 +4,7 @@ import { useSelectedLayoutSegment } from "next/navigation";
 import { Id } from "../../../convex/_generated/dataModel";
 import { Authenticated } from "convex/react";
 
-export default function ChatLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ChatLayout() {
   const chatId = useSelectedLayoutSegment() as Id<"chats"> | undefined;
   return (
     <Authenticated>
