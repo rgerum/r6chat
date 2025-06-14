@@ -16,8 +16,10 @@ import {
 import { models_definitions } from "@/lib/model-definitions";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
-import { LucideIcon } from "lucide-react";
+import { ArrowUpIcon, LucideIcon } from "lucide-react";
 import { IconType } from "@icons-pack/react-simple-icons";
+import { useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
   const chatHistory = useQuery(api.chats.getChat, {
@@ -47,7 +49,7 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
   const addChat = useMutation(api.chats.addChat);
   const router = useRouter();
   React.useEffect(() => {
-    document.getElementById("input")?.focus();
+    document.getElementById("chat-input")?.focus();
     if (props.chatId) return;
     async function triggerAddChat() {
       const id = await addChat({});
@@ -96,17 +98,30 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
 
       <form
         onSubmit={handleSubmit}
-        className="box-content -ml-3 fixed bottom-0 w-full max-w-lg border-10 border-b-0 border-pink-100 rounded-t-md bg-pink-50"
+        className="box-content p-4 pb-2 -ml-3 fixed bottom-0 w-full max-w-lg border-10 border-b-0 border-pink-100 rounded-t-md bg-pink-50"
       >
-        <input
-          id="input"
-          className=" w-full p-2 mb-8"
-          value={input}
-          autoFocus={true}
-          placeholder="Say something..."
-          onChange={handleInputChange}
-        />
-        <SelectModel model={model} setModel={setModel} />
+        <div className="flex flex-grow flex-row items-start mb-2">
+          <AutoResizeTextarea
+            name="input"
+            id="chat-input"
+            placeholder="Type your message here..."
+            className="w-full max-h-[200px] resize-none bg-transparent text-base leading-6 text-foreground outline-none placeholder:text-secondary-foreground/60 disabled:opacity-0 overflow-y-auto"
+            aria-label="Message input"
+            aria-describedby="chat-input-description"
+            autoComplete="off"
+            value={input}
+            onChange={handleInputChange}
+          />
+          <div id="chat-input-description" className="sr-only">
+            Press Enter to send, Shift + Enter for new line
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <SelectModel model={model} setModel={setModel} />
+          <Button type="submit" className={"ml-auto"}>
+            <ArrowUpIcon />
+          </Button>
+        </div>
       </form>
     </div>
   );
@@ -121,7 +136,7 @@ function SelectModel({
 }) {
   return (
     <Select value={model} onValueChange={setModel}>
-      <SelectTrigger className="w-[280px]">
+      <SelectTrigger className="-ml-4 w-fit border-0 shadow-none hover:bg-pink-300">
         <SelectValue placeholder="Select a model" />
       </SelectTrigger>
       <SelectContent>
@@ -147,4 +162,42 @@ function Icon(props: {
 }) {
   if (!props.icon) return null;
   return <props.icon className={props.className} size={props.size} />;
+}
+
+function AutoResizeTextarea(
+  props: React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    // Reset height to get the correct scrollHeight
+    textarea.style.height = "auto";
+    // Set the height to scrollHeight with a max of 200px
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
+  }, [props.value]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      {...props}
+      rows={2}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          // @ts-ignore - handleSubmit is from the parent form
+          const form = e.currentTarget.form;
+          if (form) {
+            const submitEvent = new Event("submit", {
+              cancelable: true,
+              bubbles: true,
+            });
+            form.dispatchEvent(submitEvent);
+          }
+        }
+      }}
+    />
+  );
 }
