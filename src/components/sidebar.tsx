@@ -105,6 +105,9 @@ function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
 export function Sidebar(props: { chatId: string | undefined }) {
   return (
     <>
+      <h1 className="text-2xl font-bold mb-4 text-pink-600 text-center">
+        R6 Chat
+      </h1>
       <Button asChild className={"bg-pink-300 text-center text-white"}>
         <Link href="/chat/">New Chat</Link>
       </Button>
