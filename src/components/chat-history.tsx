@@ -50,6 +50,9 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
   const router = useRouter();
   React.useEffect(() => {
     document.getElementById("chat-input")?.focus();
+    // go to the bottom when the chat changed
+    window.scrollTo({ top: document.body.scrollHeight });
+
     if (props.chatId) return;
     async function triggerAddChat() {
       const id = await addChat({});
