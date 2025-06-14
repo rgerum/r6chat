@@ -14,6 +14,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { cn } from "@/lib/utils";
 import React from "react";
+import { useRouter } from "next/navigation";
 
 // First, let's define a type for our chat object
 type Chat = {
@@ -70,6 +71,7 @@ function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
   const groupedChats = groupChats(
     chats, //.filter((chat) => chat.messages.length > 0),
   );
+  const router = useRouter();
   return (
     <ul>
       {Object.entries(groupedChats).map(([category, chats], chatId) => (
@@ -80,6 +82,10 @@ function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
               <li key={chat._id} className="w-full">
                 <Link
                   href={`/chat/${chat._id}`}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    router.push(`/chat/${chat._id}`);
+                  }}
                   className={cn(
                     "py-2 px-3 hover:bg-pink-300 truncate w-full block rounded-md",
                     chat._id === currentChatId && "bg-pink-300",
@@ -100,7 +106,7 @@ export function Sidebar(props: { chatId: string | undefined }) {
   return (
     <>
       <Button asChild className={"bg-pink-300 text-center text-white"}>
-        <Link href="/">New Chat</Link>
+        <Link href="/chat/">New Chat</Link>
       </Button>
       <Chats currentChatId={props.chatId as Id<"chats">} />
 

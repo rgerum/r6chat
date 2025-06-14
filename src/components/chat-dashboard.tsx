@@ -11,8 +11,10 @@ export default function ChatDashboard(props: { chatId?: string }) {
         <Sidebar chatId={props.chatId} />
       </div>
       <div className={" ml-[256px] w-full"}>
-        {props.chatId && (
+        {props.chatId ? (
           <ChatHistoryWrapper chatId={props.chatId as Id<"chats">} />
+        ) : (
+          <ChatHistoryWrapper chatId={undefined} />
         )}
       </div>
     </div>

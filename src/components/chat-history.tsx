@@ -14,18 +14,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { models_definitions } from "@/lib/model-definitions";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import { useRouter } from "next/navigation";
 
-export function ChatHistoryWrapper(props: { chatId: Id<"chats"> }) {
+export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
   const chatHistory = useQuery(api.chats.getChat, {
     chatId: props.chatId,
   });
   return (
     <ChatText
       chatId={props.chatId as Id<"chats">}
-      initialMessages={chatHistory?.messages.map(
-        (m) => JSON.parse(m) as Message,
-      )}
+      initialMessages={
+        chatHistory
+          ? chatHistory?.messages.map((m) => JSON.parse(m) as Message)
+          : []
+      }
     />
   );
 }
@@ -38,6 +41,18 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
     sendExtraMessageFields: true,
     body: { model },
   });
+
+  const addChat = useMutation(api.chats.addChat);
+  const router = useRouter();
+  React.useEffect(() => {
+    document.getElementById("input")?.focus();
+    if (props.chatId) return;
+    async function triggerAddChat() {
+      const id = await addChat({});
+      router.push(`/chat/${id}`);
+    }
+    void triggerAddChat();
+  }, [props.chatId]);
 
   React.useEffect(() => {
     window.scrollTo({
@@ -82,8 +97,10 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
         className="box-content -ml-3 fixed bottom-0 w-full max-w-lg border-10 border-b-0 border-pink-100 rounded-t-md bg-pink-50"
       >
         <input
+          id="input"
           className=" w-full p-2 mb-8"
           value={input}
+          autoFocus={true}
           placeholder="Say something..."
           onChange={handleInputChange}
         />
