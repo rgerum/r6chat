@@ -16,6 +16,8 @@ import {
 import { models_definitions } from "@/lib/model-definitions";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
+import { LucideIcon } from "lucide-react";
+import { IconType } from "@icons-pack/react-simple-icons";
 
 export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
   const chatHistory = useQuery(api.chats.getChat, {
@@ -34,7 +36,7 @@ export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
 }
 
 function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
-  const [model, setModel] = React.useState("gemini-2.5-flash-preview-05-20");
+  const [model, setModel] = React.useState("gpt-4o-mini");
   const { messages, input, handleInputChange, handleSubmit } = useChat({
     id: props.chatId,
     initialMessages: props.initialMessages,
@@ -128,7 +130,7 @@ function SelectModel({
             <SelectLabel>{definition.label}</SelectLabel>
             {definition.options.map((model) => (
               <SelectItem key={model.value} value={model.value}>
-                {model.label}
+                <Icon icon={definition.icon} className="mr-0.5" /> {model.label}
               </SelectItem>
             ))}
           </SelectGroup>
@@ -136,4 +138,13 @@ function SelectModel({
       </SelectContent>
     </Select>
   );
+}
+
+function Icon(props: {
+  icon: IconType | undefined;
+  className?: string;
+  size?: number;
+}) {
+  if (!props.icon) return null;
+  return <props.icon className={props.className} size={props.size} />;
 }
