@@ -65,38 +65,42 @@ function groupChats(chats: Chat[]) {
 }
 
 function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
+  const router = useRouter();
   const chats = useQuery(api.chats.getChats);
   if (!chats) return null;
 
   const groupedChats = groupChats(
     chats, //.filter((chat) => chat.messages.length > 0),
   );
-  const router = useRouter();
   return (
     <ul>
       {Object.entries(groupedChats).map(([category, chats], chatId) => (
-        <div key={chatId} className="text-xs mt-4 overflow-hidden">
-          <h2 className="font-bold mb-1 px-1">{category}</h2>
-          <ul className="w-full space-y-1">
-            {chats.map((chat) => (
-              <li key={chat._id} className="w-full">
-                <Link
-                  href={`/chat/${chat._id}`}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    router.push(`/chat/${chat._id}`);
-                  }}
-                  className={cn(
-                    "py-2 px-3 hover:bg-pink-300 truncate w-full block rounded-md",
-                    chat._id === currentChatId && "bg-pink-300",
-                  )}
-                >
-                  {chat.title || "..."}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <React.Fragment key={chatId}>
+          {chats.length > 0 && (
+            <div key={chatId} className="text-xs mt-4 overflow-hidden">
+              <h2 className="font-bold mb-1 px-1">{category}</h2>
+              <ul className="w-full space-y-1">
+                {chats.map((chat) => (
+                  <li key={chat._id} className="w-full">
+                    <Link
+                      href={`/chat/${chat._id}`}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        router.push(`/chat/${chat._id}`);
+                      }}
+                      className={cn(
+                        "py-2 px-3 hover:bg-pink-300 truncate w-full block rounded-md",
+                        chat._id === currentChatId && "bg-pink-300",
+                      )}
+                    >
+                      {chat.title || "..."}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </React.Fragment>
       ))}
     </ul>
   );
