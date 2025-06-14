@@ -18,7 +18,13 @@ import {
 import { models_definitions } from "@/lib/model-definitions";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
-import { ArrowUpIcon, LucideIcon, SquareIcon } from "lucide-react";
+import {
+  ArrowUpIcon,
+  CheckIcon,
+  CopyIcon,
+  LucideIcon,
+  SquareIcon,
+} from "lucide-react";
 import { IconType } from "@icons-pack/react-simple-icons";
 import { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -117,14 +123,18 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
                               </pre>
                             );
                           }
-
-                          const match = /language-(\w+)/.exec(
-                            firstChild.props.className || "",
+                          const className2 = firstChild.props
+                            .className as string;
+                          const content = String(
+                            firstChild.props.children as string,
                           );
+
+                          const match = /language-(\w+)/.exec(className2 || "");
                           return match ? (
                             <div>
-                              <div className="flex items-center justify-between bg-pink-200 rounded-t-md px-3 py-1">
+                              <div className="flex items-center justify-between bg-pink-200 rounded-t-md pl-3 py-1 pr-1">
                                 <div>{match[1]}</div>
+                                <CopyButton text={content} />
                               </div>
                               <pre
                                 ref={ref}
@@ -134,9 +144,7 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
                                 <SyntaxHighlighter
                                   {...props}
                                   PreTag="div"
-                                  children={String(
-                                    firstChild.props.children,
-                                  ).replace(/\n$/, "")}
+                                  children={content.replace(/\n$/, "")}
                                   language={match[1]}
                                   customStyle={{ margin: "0" }}
                                 />
@@ -276,5 +284,31 @@ function AutoResizeTextarea(
         }
       }}
     />
+  );
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = React.useState(false);
+
+  useEffect(() => {
+    if (copied) {
+      const timeout = setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [copied]);
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+      }}
+    >
+      {copied ? <CheckIcon /> : <CopyIcon />}
+    </Button>
   );
 }
