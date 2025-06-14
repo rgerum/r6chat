@@ -1,5 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { dark as codeStyle } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Id } from "@/../convex/_generated/dataModel";
 import { api } from "@/../convex/_generated/api";
 import { Message, useChat } from "@ai-sdk/react";
@@ -98,7 +100,58 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
                         : "",
                     )}
                   >
-                    <ReactMarkdown>{part.text}</ReactMarkdown>
+                    <ReactMarkdown
+                      components={{
+                        pre: ({ node, ref, className, children, ...props }) => {
+                          const firstChild =
+                            React.Children.toArray(children)[0];
+
+                          if (
+                            !firstChild ||
+                            typeof firstChild !== "object" ||
+                            !("props" in firstChild)
+                          ) {
+                            return (
+                              <pre ref={ref} {...props} className={className}>
+                                {children}
+                              </pre>
+                            );
+                          }
+
+                          const match = /language-(\w+)/.exec(
+                            firstChild.props.className || "",
+                          );
+                          return match ? (
+                            <div>
+                              <div className="flex items-center justify-between bg-pink-200 rounded-t-md px-3 py-1">
+                                <div>{match[1]}</div>
+                              </div>
+                              <pre
+                                ref={ref}
+                                className={"rounded-t-none"}
+                                style={{ padding: "0", margin: "0" }}
+                              >
+                                <SyntaxHighlighter
+                                  {...props}
+                                  PreTag="div"
+                                  children={String(
+                                    firstChild.props.children,
+                                  ).replace(/\n$/, "")}
+                                  language={match[1]}
+                                  customStyle={{ margin: "0" }}
+                                />
+                              </pre>
+                            </div>
+                          ) : (
+                            <pre ref={ref} {...props} className={className}>
+                              {children}
+                            </pre>
+                          );
+                        },
+                      }}
+                    >
+                      {part.text}
+                    </ReactMarkdown>
                   </div>
                 );
             }

@@ -64,8 +64,35 @@ function groupChats(chats: Chat[]) {
   return groupedChats;
 }
 
-function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
+function MouseDownLink({
+  href,
+  className,
+  children,
+}: {
+  href: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
   const router = useRouter();
+
+  return (
+    <Link
+      href={href}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        router.push(href);
+      }}
+      onClick={(e) => {
+        e.preventDefault();
+      }}
+      className={className}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
   const chats = useQuery(api.chats.getChats);
   if (!chats) return null;
 
@@ -82,19 +109,15 @@ function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
               <ul className="w-full space-y-1">
                 {chats.map((chat) => (
                   <li key={chat._id} className="w-full">
-                    <Link
+                    <MouseDownLink
                       href={`/chat/${chat._id}`}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        router.push(`/chat/${chat._id}`);
-                      }}
                       className={cn(
                         "py-2 px-3 hover:bg-pink-300 truncate w-full block rounded-md",
                         chat._id === currentChatId && "bg-pink-300",
                       )}
                     >
                       {chat.title || "..."}
-                    </Link>
+                    </MouseDownLink>
                   </li>
                 ))}
               </ul>
@@ -113,7 +136,7 @@ export function Sidebar(props: { chatId: string | undefined }) {
         R6 Chat
       </h1>
       <Button asChild className={"bg-pink-300 text-center text-white"}>
-        <Link href="/chat/">New Chat</Link>
+        <MouseDownLink href="/chat/">New Chat</MouseDownLink>
       </Button>
       <Chats currentChatId={props.chatId as Id<"chats">} />
 
