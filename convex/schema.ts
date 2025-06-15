@@ -13,5 +13,6 @@ export default defineSchema({
     title: v.optional(v.string()),
     messages: v.array(v.string()),
     lastUpdate: v.optional(v.number()),
+    pinned: v.optional(v.boolean()),
   }).index("by_user", ["userId", "lastUpdate"]),
 });

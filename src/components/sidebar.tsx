@@ -10,20 +10,17 @@ import {
 } from "@clerk/nextjs";
 import Link from "next/link";
 import { Id } from "../../convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { useRouter } from "next/navigation";
-
-// First, let's define a type for our chat object
-type Chat = {
-  _id: Id<"chats">;
-  userId: string;
-  title?: string;
-  messages: string[];
-  lastUpdate?: number; // Note: This is optional in your schema
-};
+import { PinIcon, PinOffIcon, XIcon } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Update the groupChats function
 function groupChats(chats: Chat[]) {
@@ -32,6 +29,7 @@ function groupChats(chats: Chat[]) {
 
   // Initialize categories with proper types
   const groupedChats = {
+    Pinned: [] as Chat[],
     Today: [] as Chat[],
     Yesterday: [] as Chat[],
     "Last 30 Days": [] as Chat[],
@@ -42,6 +40,11 @@ function groupChats(chats: Chat[]) {
   chats.forEach((chat) => {
     // Skip if lastUpdate is not set
     if (!chat.lastUpdate) return;
+
+    if (chat.pinned) {
+      groupedChats.Pinned.push(chat);
+      return;
+    }
 
     const chatDate = new Date(chat.lastUpdate);
     const chatDateString = chatDate.toDateString();
@@ -92,8 +95,88 @@ function MouseDownLink({
   );
 }
 
+function ChatLink(props: {
+  chat: Chat;
+  currentChatId: Id<"chats"> | undefined;
+}) {
+  const [hover, setHover] = React.useState(false);
+  const deleteChat = useMutation(api.chats.deleteChat);
+  const pinChat = useMutation(api.chats.pinChat);
+
+  return (
+    <li
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className={cn(
+        "w-full relative overflow-hidden py-2 px-3 hover:bg-pink-300 truncate block rounded-md",
+        props.chat._id === props.currentChatId && "bg-pink-300",
+      )}
+    >
+      <MouseDownLink href={`/chat/${props.chat._id}`}>
+        {props.chat.title || "..."}
+      </MouseDownLink>
+      <div
+        className={cn(
+          "absolute right-1 top-1/2 transform transition-all -translate-y-1/2 ",
+          !hover && "opacity-0 translate-x-1/2 bg-transparent",
+          hover && " bg-pink-300 opacity-100",
+        )}
+      >
+        <div className="pointer-events-none absolute bottom-0 right-[100%] top-0 w-8 bg-gradient-to-l from-pink-300 to-transparent "></div>
+        <ButtonWithTooltip
+          className={" h-6 w-6 hover:bg-pink-200 bg-transparent"}
+          onClick={() =>
+            pinChat({
+              chatId: props.chat._id,
+              pinned: !props.chat.pinned,
+            })
+          }
+          tooltipMessage={props.chat.pinned ? "Unpin Chat" : "Pin Chat"}
+        >
+          {props.chat.pinned ? (
+            <PinOffIcon className="w-4 h-4" />
+          ) : (
+            <PinIcon className="w-4 h-4" />
+          )}
+        </ButtonWithTooltip>
+        <ButtonWithTooltip
+          className={" h-6 w-6 hover:bg-pink-200 bg-transparent"}
+          onClick={() => deleteChat({ chatId: props.chat._id })}
+          tooltipMessage={"Delete Chat"}
+        >
+          <XIcon className="w-4 h-4" />
+        </ButtonWithTooltip>
+      </div>
+    </li>
+  );
+}
+
+function ButtonWithTooltip(props: {
+  children: React.ReactNode;
+  className: string;
+  onClick?: () => void;
+  tooltipMessage?: string;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger>
+        <Button className={props.className} onClick={props.onClick}>
+          {props.children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{props.tooltipMessage}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+type Chat = NonNullable<Awaited<ReturnType<typeof useChats>>>[number];
+
+function useChats() {
+  return useQuery(api.chats.getChats);
+}
+
 function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
-  const chats = useQuery(api.chats.getChats);
+  const chats = useChats();
   if (!chats) return null;
 
   const groupedChats = groupChats(
@@ -105,20 +188,19 @@ function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
         <React.Fragment key={chatId}>
           {chats.length > 0 && (
             <div key={chatId} className="text-xs mt-4 overflow-hidden">
-              <h2 className="font-bold mb-1 px-1">{category}</h2>
+              <h2 className="font-bold mb-1 px-1">
+                {category == "Pinned" && (
+                  <PinIcon className="w-3 h-3 inline-block mr-1" />
+                )}
+                {category}
+              </h2>
               <ul className="w-full space-y-1">
                 {chats.map((chat) => (
-                  <li key={chat._id} className="w-full">
-                    <MouseDownLink
-                      href={`/chat/${chat._id}`}
-                      className={cn(
-                        "py-2 px-3 hover:bg-pink-300 truncate w-full block rounded-md",
-                        chat._id === currentChatId && "bg-pink-300",
-                      )}
-                    >
-                      {chat.title || "..."}
-                    </MouseDownLink>
-                  </li>
+                  <ChatLink
+                    key={chat._id}
+                    chat={chat}
+                    currentChatId={currentChatId}
+                  />
                 ))}
               </ul>
             </div>

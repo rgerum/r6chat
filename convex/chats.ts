@@ -109,3 +109,45 @@ export const addTitleToChat = mutation({
     return chat;
   },
 });
+
+export const deleteChat = mutation({
+  args: {
+    chatId: v.id("chats"),
+  },
+  handler: async (ctx, { chatId }) => {
+    const userId = await getUserIdOrThrow(ctx);
+    if (!userId) {
+      throw new Error("Not logged in");
+    }
+    let chat = await ctx.db.get(chatId);
+    if (!chat) {
+      throw new Error("Chat not found");
+    }
+    if (chat.userId !== userId) {
+      throw new Error("Not your chat");
+    }
+    await ctx.db.delete(chatId);
+  },
+});
+
+export const pinChat = mutation({
+  args: {
+    chatId: v.id("chats"),
+    pinned: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserIdOrThrow(ctx);
+    if (!userId) {
+      throw new Error("Not logged in");
+    }
+    let chat = await ctx.db.get(args.chatId);
+    if (!chat) {
+      throw new Error("Chat not found");
+    }
+    if (chat.userId !== userId) {
+      throw new Error("Not your chat");
+    }
+    chat.pinned = args.pinned;
+    await ctx.db.patch(args.chatId, chat);
+  },
+});
