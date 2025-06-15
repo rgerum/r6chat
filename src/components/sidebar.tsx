@@ -102,27 +102,36 @@ function ChatLink(props: {
   const [hover, setHover] = React.useState(false);
   const deleteChat = useMutation(api.chats.deleteChat);
   const pinChat = useMutation(api.chats.pinChat);
+  const router = useRouter();
 
   return (
     <li
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       className={cn(
-        "w-full relative overflow-hidden py-2 px-3 hover:bg-pink-300 truncate block rounded-md",
+        "w-full relative overflow-hidden py-2 px-3 hover:bg-pink-300 truncate block rounded-md cursor-pointer",
         props.chat._id === props.currentChatId && "bg-pink-300",
       )}
+      onClick={(e) => {
+        router.push(`/chat/${props.chat._id}`);
+      }}
     >
       <MouseDownLink href={`/chat/${props.chat._id}`}>
         {props.chat.title || "..."}
       </MouseDownLink>
       <div
         className={cn(
-          "absolute right-1 top-1/2 transform transition-all -translate-y-1/2 ",
-          !hover && "opacity-0 translate-x-1/2 bg-transparent",
+          "absolute right-1 top-1/2 transform transition-opacity -translate-y-1/2 ",
+          !hover && "opacity-0  bg-transparent",
           hover && " bg-pink-300 opacity-100",
         )}
       >
-        <div className="pointer-events-none absolute bottom-0 right-[100%] top-0 w-8 bg-gradient-to-l from-pink-300 to-transparent "></div>
+        <div
+          className={cn(
+            "pointer-events-none absolute bottom-0 right-[100%] top-0 w-8 bg-gradient-to-l from-pink-300 to-transparent ",
+            !hover && "from-transparent",
+          )}
+        ></div>
         <ButtonWithTooltip
           className={" h-6 w-6 hover:bg-pink-200 bg-transparent"}
           onClick={() =>
@@ -187,7 +196,7 @@ function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
       {Object.entries(groupedChats).map(([category, chats], chatId) => (
         <React.Fragment key={chatId}>
           {chats.length > 0 && (
-            <div key={chatId} className="text-xs mt-4 overflow-hidden">
+            <div key={chatId} className="text-xs mt-6 overflow-hidden">
               <h2 className="font-bold mb-1 px-1">
                 {category == "Pinned" && (
                   <PinIcon className="w-3 h-3 inline-block mr-1" />
