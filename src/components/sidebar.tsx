@@ -99,17 +99,14 @@ function ChatLink(props: {
   chat: Chat;
   currentChatId: Id<"chats"> | undefined;
 }) {
-  const [hover, setHover] = React.useState(false);
   const deleteChat = useMutation(api.chats.deleteChat);
   const pinChat = useMutation(api.chats.pinChat);
   const router = useRouter();
 
   return (
     <li
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
       className={cn(
-        "w-full relative overflow-hidden py-2 px-3 hover:bg-pink-300 truncate block rounded-md cursor-pointer",
+        "group w-full relative overflow-hidden py-2 px-3 hover:bg-pink-300 truncate block rounded-md cursor-pointer",
         props.chat._id === props.currentChatId && "bg-pink-300",
       )}
       onClick={(e) => {
@@ -119,19 +116,8 @@ function ChatLink(props: {
       <MouseDownLink href={`/chat/${props.chat._id}`}>
         {props.chat.title || "..."}
       </MouseDownLink>
-      <div
-        className={cn(
-          "absolute right-1 top-1/2 transform -translate-y-1/2 ",
-          !hover && "opacity-0  bg-transparent",
-          hover && " bg-pink-300 opacity-100",
-        )}
-      >
-        <div
-          className={cn(
-            "pointer-events-none absolute bottom-0 right-[100%] top-0 w-8 bg-gradient-to-l from-pink-300 to-transparent ",
-            !hover && "from-transparent",
-          )}
-        ></div>
+      <div className="absolute right-1 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 group-hover:bg-pink-300">
+        <div className="pointer-events-none absolute bottom-0 right-[100%] top-0 w-8 bg-gradient-to-l from-transparent group-hover:from-pink-300 to-transparent"></div>
         <ButtonWithTooltip
           className={" h-6 w-6 hover:bg-pink-200 bg-transparent"}
           onClick={() =>
