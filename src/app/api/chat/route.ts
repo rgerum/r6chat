@@ -56,6 +56,15 @@ export async function POST(req: Request) {
   if (!token) {
     return new Response("Unauthorized", { status: 401 });
   }
+  const provider = getModelProvider(model);
+  if (!provider) return new Response("Unknown model", { status: 401 });
+
+  const apiKey = await fetchQuery(
+    api.userApiKeys.getApiKey,
+    { modelProvider: provider },
+    { token },
+  );
+  if (!apiKey) return new Response("No key provided", { status: 401 });
 
   const title = await fetchQuery(
     api.chats.getChatTitle,
@@ -67,12 +76,12 @@ export async function POST(req: Request) {
     },
   );
 
-  const modelInstance = getModelInstance(model);
+  const modelInstance = getModelInstance(model, { apiKey });
   if (!modelInstance) throw new Error("model not found");
 
   if (!title) {
     const result = streamText({
-      model: openai("gpt-4o-mini"),
+      model: modelInstance,
       prompt: "Create a title for this conversation: " + messages[0].content,
       async onFinish({ response }) {
         const title = getText(response.messages);
@@ -109,7 +118,7 @@ import { Message } from "ai";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { getAuthToken } from "@/app/auth";
-import { getModelInstance } from "@/lib/model-instance";
+import { getModelInstance, getModelProvider } from "@/lib/model-instance";
 
 export async function saveTitle({
   id,

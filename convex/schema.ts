@@ -15,4 +15,12 @@ export default defineSchema({
     lastUpdate: v.optional(v.number()),
     pinned: v.optional(v.boolean()),
   }).index("by_user", ["userId", "lastUpdate"]),
+
+  userApiKeys: defineTable({
+    userId: v.string(),
+    modelProvider: v.string(),
+    apiKey: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user_provider", ["userId", "modelProvider"]),
 });

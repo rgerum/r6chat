@@ -15,7 +15,7 @@ import { api } from "../../convex/_generated/api";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { PinIcon, PinOffIcon, XIcon } from "lucide-react";
+import { PinIcon, PinOffIcon, XIcon, UserIcon } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -230,15 +230,25 @@ export function Sidebar(props: { chatId: string | undefined }) {
         <MouseDownLink href="/chat/">New Chat</MouseDownLink>
       </Button>
       <Chats currentChatId={props.chatId as Id<"chats">} />
+      <footer className="mt-auto pt-4">
+        <div className="mt-auto pt-4">
+          <Button asChild variant="ghost" className="w-full justify-start">
+            <MouseDownLink href="/profile">
+              <UserIcon className="mr-2 h-4 w-4" />
+              Profile
+            </MouseDownLink>
+          </Button>
+        </div>
 
-      <footer className="mt-auto">
-        <SignedOut>
-          <SignInButton />
-          <SignUpButton />
-        </SignedOut>
-        <SignedIn>
-          <UserButton />
-        </SignedIn>
+        <div className="pt-2">
+          <SignedOut>
+            <SignInButton />
+            <SignUpButton />
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+        </div>
       </footer>
     </>
   );
