@@ -12,10 +12,12 @@ import {
 } from "@/components/ui/card";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/../convex/_generated/api";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk, useAuth } from "@clerk/nextjs";
 import { useState } from "react";
-import { Trash2, Plus, ArrowLeft } from "lucide-react";
+import { Trash2, Plus, ArrowLeft, LogOut, UserX } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { models_definitions } from "@/lib/model-definitions";
 
@@ -67,9 +69,45 @@ export default function ProfilePage() {
     }
   };
 
+  const { signOut } = useClerk();
+  const { getToken } = useAuth();
+  const router = useRouter();
+
+  const handleSignOut = () => {
+    signOut(() => router.push('/'));
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      const response = await fetch('/api/delete-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete account');
+      }
+
+      await signOut();
+      router.push('/');
+      toast.success('Your account has been deleted successfully');
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast.error('Failed to delete account. Please try again.');
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <div className="mb-6">
+      <div className="flex justify-between items-center mb-6">
         <Button asChild variant="ghost" className="gap-2 pl-0">
           <Link href="/chat">
             <ArrowLeft className="h-4 w-4" />
@@ -108,6 +146,27 @@ export default function ProfilePage() {
                 disabled
                 className="mt-1 max-w-md"
               />
+            </div>
+            
+            <div className="pt-4 border-t">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  variant="outline"
+                  onClick={handleSignOut}
+                  className="gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteAccount}
+                  className="gap-2"
+                >
+                  <UserX className="h-4 w-4" />
+                  Delete Account
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
