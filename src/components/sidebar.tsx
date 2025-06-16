@@ -7,6 +7,7 @@ import {
   SignInButton,
   SignUpButton,
   UserButton,
+  useUser,
 } from "@clerk/nextjs";
 import Link from "next/link";
 import { Id } from "../../convex/_generated/dataModel";
@@ -21,6 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Update the groupChats function
 function groupChats(chats: Chat[]) {
@@ -210,6 +212,15 @@ function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
 }
 
 export function Sidebar(props: { chatId: string | undefined }) {
+  const { user } = useUser();
+  const userInitials = user?.fullName
+    ? user.fullName
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+    : user?.username?.[0]?.toUpperCase() || 'U';
+
   return (
     <>
       <h1 className="text-2xl font-bold mb-4 text-pink-600 text-center">
@@ -220,24 +231,51 @@ export function Sidebar(props: { chatId: string | undefined }) {
       </Button>
       <Chats currentChatId={props.chatId as Id<"chats">} />
       <footer className="mt-auto pt-4">
-        <div className="mt-auto pt-4">
-          <Button asChild variant="ghost" className="w-full justify-start">
-            <MouseDownLink href="/profile">
-              <UserIcon className="mr-2 h-4 w-4" />
-              Profile
+        <SignedIn>
+          <Button
+            asChild
+            variant="ghost"
+            className="w-full justify-start h-auto py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <MouseDownLink
+              href="/profile"
+              className="flex items-center gap-3 w-full"
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarImage 
+                  src={user?.imageUrl} 
+                  alt={user?.fullName || user?.username || 'User'}
+                />
+                <AvatarFallback className="text-xs">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0 text-left overflow-hidden">
+                <p className="font-medium text-sm truncate">
+                  {user?.fullName || user?.username || 'User'}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  View profile
+                </p>
+              </div>
             </MouseDownLink>
           </Button>
-        </div>
-
-        <div className="pt-2">
-          <SignedOut>
-            <SignInButton />
-            <SignUpButton />
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
-        </div>
+        </SignedIn>
+        <SignedOut>
+          <div className="space-y-2">
+            <Button asChild variant="default" className="w-full">
+              <SignInButton mode="modal" />
+            </Button>
+            <p className="text-xs text-center text-muted-foreground">
+              Don't have an account?{" "}
+              <SignUpButton mode="modal">
+                <button className="text-pink-500 hover:underline">
+                  Sign up
+                </button>
+              </SignUpButton>
+            </p>
+          </div>
+        </SignedOut>
       </footer>
     </>
   );
