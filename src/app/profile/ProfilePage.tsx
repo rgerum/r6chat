@@ -115,108 +115,100 @@ export default function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>API Keys</CardTitle>
+          <CardTitle>Your API Keys</CardTitle>
           <CardDescription>
-            Add or update your API keys for different model providers
+            Manage your API keys for different model providers
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {!isAdding ? (
-              <Button
-                variant="outline"
-                onClick={() => setIsAdding(true)}
-                className="gap-2"
-              >
-                <Plus className="h-4 w-4" /> Add API Key
-              </Button>
-            ) : (
-              <form
-                onSubmit={handleAddKey}
-                className="space-y-4 p-4 border rounded-lg bg-muted/50"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="provider">Provider</Label>
-                    <select
-                      id="provider"
-                      value={selectedProvider}
-                      onChange={(e) => setSelectedProvider(e.target.value)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      required
-                    >
-                      <option value="">Select a provider</option>
-                      {MODEL_PROVIDERS.map((provider) => (
-                        <option key={provider.id} value={provider.id}>
-                          {provider.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <Label htmlFor="apiKey">API Key</Label>
-                    <Input
-                      id="apiKey"
-                      type="password"
-                      value={newApiKey}
-                      onChange={(e) => setNewApiKey(e.target.value)}
-                      placeholder="sk-..."
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button type="submit">Save</Button>
-                  <Button
-                    variant="outline"
-                    type="button"
-                    onClick={() => {
-                      setIsAdding(false);
-                      setNewApiKey("");
-                      setSelectedProvider("");
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            )}
+          <div className="space-y-6">
+            {MODEL_PROVIDERS.map((provider) => {
+              const existingKey = apiKeys?.find(k => k.modelProvider === provider.id);
+              const [isEditing, setIsEditing] = useState(false);
+              const [apiKey, setApiKey] = useState(existingKey?.apiKey || '');
 
-            <div className="space-y-2 mt-6">
-              <h3 className="font-medium">Your API Keys</h3>
-              {apiKeys && apiKeys.length > 0 ? (
-                <div className="border rounded-lg divide-y">
-                  {apiKeys.map((key) => (
-                    <div
-                      key={key._id}
-                      className="flex items-center justify-between p-4"
-                    >
-                      <div>
-                        <div className="font-medium capitalize">
-                          {key.modelProvider}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Last updated:{" "}
-                          {new Date(key.updatedAt).toLocaleDateString()}
-                        </div>
-                      </div>
+              const handleSave = async (e: React.FormEvent) => {
+                e.preventDefault();
+                if (!apiKey.trim()) return;
+
+                try {
+                  await upsertKey({
+                    modelProvider: provider.id,
+                    apiKey: apiKey.trim(),
+                  });
+                  setIsEditing(false);
+                } catch (error) {
+                  console.error('Failed to save API key:', error);
+                }
+              };
+
+              return (
+                <div key={provider.id} className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium capitalize">{provider.name}</h3>
+                    {!isEditing && (
                       <Button
                         variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteKey(key._id)}
-                        className="text-destructive hover:text-destructive"
+                        size="sm"
+                        onClick={() => setIsEditing(true)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {existingKey ? 'Edit' : 'Add Key'}
                       </Button>
+                    )}
+                  </div>
+                  
+                  {isEditing ? (
+                    <form onSubmit={handleSave} className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="password"
+                          value={apiKey}
+                          onChange={(e) => setApiKey(e.target.value)}
+                          placeholder={`Enter your ${provider.name} API key`}
+                          className="flex-1"
+                        />
+                        <Button type="submit">Save</Button>
+                        <Button
+                          variant="outline"
+                          type="button"
+                          onClick={() => {
+                            setApiKey(existingKey?.apiKey || '');
+                            setIsEditing(false);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <div className="text-muted-foreground">
+                        {existingKey ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-500">••••••••••••••••</span>
+                            <span className="text-xs text-muted-foreground">
+                              Updated {new Date(existingKey.updatedAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        ) : (
+                          <span>No API key added</span>
+                        )}
+                      </div>
+                      {existingKey && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteKey(existingKey._id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-                  ))}
+                  )}
                 </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No API keys added yet</p>
-                </div>
-              )}
-            </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
