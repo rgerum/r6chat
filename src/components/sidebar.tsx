@@ -121,7 +121,7 @@ function ChatLink(props: {
       </MouseDownLink>
       <div
         className={cn(
-          "absolute right-1 top-1/2 transform transition-opacity -translate-y-1/2 ",
+          "absolute right-1 top-1/2 transform -translate-y-1/2 ",
           !hover && "opacity-0  bg-transparent",
           hover && " bg-pink-300 opacity-100",
         )}
@@ -169,9 +169,12 @@ function ButtonWithTooltip(props: {
   return (
     <Tooltip>
       <TooltipTrigger>
-        <Button className={props.className} onClick={props.onClick}>
+        <div
+          className={cn("grid place-items-center rounded-md", props.className)}
+          onClick={props.onClick}
+        >
           {props.children}
-        </Button>
+        </div>
       </TooltipTrigger>
       <TooltipContent>{props.tooltipMessage}</TooltipContent>
     </Tooltip>
