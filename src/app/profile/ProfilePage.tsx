@@ -17,15 +17,18 @@ import { useState } from "react";
 import { Trash2, Plus, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-// List of supported model providers
-const MODEL_PROVIDERS = [
-  { id: "openai", name: "OpenAI" },
-  { id: "anthropic", name: "Anthropic" },
-  { id: "cohere", name: "Cohere" },
-  { id: "replicate", name: "Replicate" },
-  { id: "huggingface", name: "Hugging Face" },
-  { id: "deepseek", name: "DeepSeek" },
-];
+import { models_definitions } from "@/lib/model-definitions";
+
+// Get unique providers from models_definitions
+const MODEL_PROVIDERS = Array.from(
+  new Set(models_definitions.map((def) => def.provider))
+).map((provider) => {
+  const def = models_definitions.find((d) => d.provider === provider)!;
+  return {
+    id: provider,
+    name: def.label,
+  };
+});
 
 export default function ProfilePage() {
   const { user } = useUser();
