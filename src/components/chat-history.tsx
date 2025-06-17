@@ -43,6 +43,9 @@ export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
           ? chatHistory?.messages.map((m) => JSON.parse(m) as Message)
           : []
       }
+      newChat={
+        (chatHistory && chatHistory.messages.length === 0) || !props.chatId
+      }
       writeable={chatHistory?.writeable ?? true}
       access_public={chatHistory?.access_public ?? false}
     />
@@ -54,6 +57,7 @@ function ChatText(props: {
   initialMessages?: Message[];
   writeable: boolean;
   access_public: boolean;
+  newChat: boolean;
 }) {
   const [model, setModel] = React.useState("gpt-4o-mini");
   const {
@@ -144,7 +148,7 @@ function ChatText(props: {
           <AlertDescription>The chat has been shared with you</AlertDescription>
         </Alert>
       )}
-      {messages.length === 0 && (
+      {props.newChat && messages.length === 0 && (
         <EmptyState
           hasInput={!!input}
           onSuggestionClick={(suggestion) => {

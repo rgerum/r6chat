@@ -108,9 +108,48 @@ function ChatLink(props: {
   chat: Chat;
   currentChatId: Id<"chats"> | undefined;
 }) {
-  const deleteChat = useMutation(api.chats.deleteChat);
-  const pinChat = useMutation(api.chats.pinChat);
+  const deleteChat = useMutation(api.chats.deleteChat).withOptimisticUpdate(
+    (localStore, { chatId }) => {
+      // Get the current list of chats
+      const chats = localStore.getQuery(api.chats.getChats, {});
+      if (!chats) return;
+
+      // Update the local state optimistically
+      localStore.setQuery(
+        api.chats.getChats,
+        {},
+        chats.filter((chat) => chat._id !== chatId),
+      );
+    },
+  );
+  const pinChat = useMutation(api.chats.pinChat).withOptimisticUpdate(
+    (localStore, { chatId, pinned }) => {
+      // Get the current list of chats
+      const chats = localStore.getQuery(api.chats.getChats, {});
+      if (!chats) return;
+
+      // Update the local state optimistically
+      localStore.setQuery(
+        api.chats.getChats,
+        {},
+        chats.map((chat) => ({
+          ...chat,
+          pinned: chat._id === chatId ? pinned : chat.pinned,
+        })),
+      );
+    },
+  );
   const router = useRouter();
+  const handleDelete = async () => {
+    try {
+      await deleteChat({ chatId: props.chat._id });
+      if (props.currentChatId === props.chat._id) {
+        router.push("/chat");
+      }
+    } catch (error) {
+      console.error("Failed to delete chat:", error);
+    }
+  };
 
   return (
     <li
@@ -145,7 +184,7 @@ function ChatLink(props: {
         </ButtonWithTooltip>
         <ButtonWithTooltip
           className={" h-6 w-6 hover:bg-pink-200 bg-transparent"}
-          onClick={() => deleteChat({ chatId: props.chat._id })}
+          onClick={handleDelete}
           tooltipMessage={"Delete Chat"}
         >
           <XIcon className="w-4 h-4" />
