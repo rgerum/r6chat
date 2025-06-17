@@ -42,6 +42,7 @@ function groupChats(chats: Chat[]) {
   chats.forEach((chat) => {
     // Skip if lastUpdate is not set
     if (!chat.lastUpdate) return;
+    if (chat.messages.length === 0) return;
 
     if (chat.pinned) {
       groupedChats.Pinned.push(chat);
@@ -215,11 +216,11 @@ export function Sidebar(props: { chatId: string | undefined }) {
   const { user } = useUser();
   const userInitials = user?.fullName
     ? user.fullName
-        .split(' ')
+        .split(" ")
         .map((n) => n[0])
-        .join('')
+        .join("")
         .toUpperCase()
-    : user?.username?.[0]?.toUpperCase() || 'U';
+    : user?.username?.[0]?.toUpperCase() || "U";
 
   return (
     <>
@@ -242,9 +243,9 @@ export function Sidebar(props: { chatId: string | undefined }) {
               className="flex items-center gap-3 w-full"
             >
               <Avatar className="h-8 w-8">
-                <AvatarImage 
-                  src={user?.imageUrl} 
-                  alt={user?.fullName || user?.username || 'User'}
+                <AvatarImage
+                  src={user?.imageUrl}
+                  alt={user?.fullName || user?.username || "User"}
                 />
                 <AvatarFallback className="text-xs">
                   {userInitials}
@@ -252,7 +253,7 @@ export function Sidebar(props: { chatId: string | undefined }) {
               </Avatar>
               <div className="flex-1 min-w-0 text-left overflow-hidden">
                 <p className="font-medium text-sm truncate">
-                  {user?.fullName || user?.username || 'User'}
+                  {user?.fullName || user?.username || "User"}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
                   View profile

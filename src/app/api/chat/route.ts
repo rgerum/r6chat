@@ -79,6 +79,14 @@ export async function POST(req: Request) {
   const modelInstance = getModelInstance(model, { apiKey });
   if (!modelInstance) throw new Error("model not found");
 
+  // trigger the response now but await it later
+  const saveChatPromise = saveChat({
+    id,
+    token,
+    messages,
+  });
+  after(async () => saveChatPromise);
+
   if (!title) {
     const result = streamText({
       model: modelInstance,
@@ -119,6 +127,7 @@ import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { getAuthToken } from "@/app/auth";
 import { getModelInstance, getModelProvider } from "@/lib/model-instance";
+import { after } from "next/server";
 
 export async function saveTitle({
   id,
