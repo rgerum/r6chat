@@ -139,7 +139,6 @@ function ChatText(props: {
     e.preventDefault();
     stop();
   }
-  console.log("last message", status, messages.at(-1));
 
   return (
     <div className="flex flex-col w-full max-w-lg py-24 px-4 mx-auto stretch">
@@ -163,7 +162,6 @@ function ChatText(props: {
           onSuggestionClick={(suggestion) => {
             // Handle suggestion click
             void append({ role: "user", content: suggestion });
-            console.log("Selected suggestion:", suggestion);
           }}
         />
       )}
