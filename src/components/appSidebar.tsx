@@ -23,6 +23,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+} from "@/components/ui/sidebar";
 
 // Update the groupChats function
 function groupChats(chats: Chat[]) {
@@ -109,7 +115,7 @@ function ChatLink(props: {
   return (
     <li
       className={cn(
-        "group w-full relative overflow-hidden py-2 px-3 hover:bg-pink-300 truncate block rounded-md cursor-pointer",
+        "group/link w-full relative overflow-hidden py-2 px-3 hover:bg-pink-300 truncate block rounded-md cursor-pointer",
         props.chat._id === props.currentChatId && "bg-pink-300",
       )}
       onClick={(e) => {
@@ -119,8 +125,8 @@ function ChatLink(props: {
       <MouseDownLink href={`/chat/${props.chat._id}`}>
         {props.chat.title || "..."}
       </MouseDownLink>
-      <div className="absolute right-1 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 group-hover:bg-pink-300">
-        <div className="pointer-events-none absolute bottom-0 right-[100%] top-0 w-8 bg-gradient-to-l from-transparent group-hover:from-pink-300 to-transparent"></div>
+      <div className="absolute right-1 top-1/2 transform -translate-y-1/2 opacity-0 group-hover/link:opacity-100 group-hover/link:bg-pink-300">
+        <div className="pointer-events-none absolute bottom-0 right-[100%] top-0 w-8 bg-gradient-to-l from-transparent group-hover/link:from-pink-300 to-transparent"></div>
         <ButtonWithTooltip
           className={" h-6 w-6 hover:bg-pink-200 bg-transparent"}
           onClick={() =>
@@ -212,7 +218,7 @@ function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
   );
 }
 
-export function Sidebar(props: { chatId: string | undefined }) {
+export function AppSidebar(props: { chatId: string | undefined }) {
   const { user } = useUser();
   const userInitials = user?.fullName
     ? user.fullName
@@ -223,15 +229,19 @@ export function Sidebar(props: { chatId: string | undefined }) {
     : user?.username?.[0]?.toUpperCase() || "U";
 
   return (
-    <>
-      <h1 className="text-2xl font-bold mb-4 text-pink-600 text-center">
-        R6 Chat
-      </h1>
-      <Button asChild className={"bg-pink-300 text-center text-white"}>
-        <MouseDownLink href="/chat/">New Chat</MouseDownLink>
-      </Button>
-      <Chats currentChatId={props.chatId as Id<"chats">} />
-      <footer className="mt-auto pt-4">
+    <Sidebar>
+      <SidebarHeader className={"px-3 py-4"}>
+        <h1 className="text-2xl font-bold text-pink-600 text-center">
+          R6 Chat
+        </h1>
+        <Button asChild className={"bg-pink-300 text-center text-white"}>
+          <MouseDownLink href="/chat/">New Chat</MouseDownLink>
+        </Button>
+      </SidebarHeader>
+      <SidebarContent className={"px-3"}>
+        <Chats currentChatId={props.chatId as Id<"chats">} />
+      </SidebarContent>
+      <SidebarFooter className="mt-auto pt-4 px-3 pb-4">
         <SignedIn>
           <Button
             asChild
@@ -277,7 +287,7 @@ export function Sidebar(props: { chatId: string | undefined }) {
             </p>
           </div>
         </SignedOut>
-      </footer>
-    </>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

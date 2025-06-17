@@ -129,7 +129,7 @@ function ChatText(props: {
   }
 
   return (
-    <div className="flex flex-col w-full max-w-lg py-24 mx-auto stretch">
+    <div className="flex flex-col w-full max-w-lg py-24 px-4 mx-auto stretch">
       {props.writeable ? (
         <div className="flex justify-end mb-4 -mt-20 sticky top-4">
           <ShareButton
@@ -242,7 +242,7 @@ function ChatText(props: {
               ? handleStop
               : handleSubmit
           }
-          className="box-content p-4 pb-2 -ml-3 fixed bottom-0 w-full max-w-lg border-10 border-b-0 border-pink-100 rounded-t-md bg-pink-50"
+          className="p-4 pb-2 -ml-3 fixed bottom-0 w-full max-w-lg border-10 border-b-0 border-pink-100 rounded-t-md bg-pink-50"
         >
           <div className="flex flex-grow flex-row items-start mb-2">
             <AutoResizeTextarea
