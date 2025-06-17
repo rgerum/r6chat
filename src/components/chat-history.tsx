@@ -52,6 +52,14 @@ export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
   );
 }
 
+function ChatSpinner() {
+  return (
+    <div className="flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-pink-600" />
+    </div>
+  );
+}
+
 function ChatText(props: {
   chatId: Id<"chats">;
   initialMessages?: Message[];
@@ -98,7 +106,7 @@ function ChatText(props: {
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } =
         document.documentElement;
-      const isBottom = scrollHeight - (scrollTop + clientHeight) < 0; // 100px threshold
+      const isBottom = scrollHeight - (scrollTop + clientHeight) <= 1; // 100px threshold
       setIsAtBottom(isBottom);
     };
 
@@ -131,6 +139,7 @@ function ChatText(props: {
     e.preventDefault();
     stop();
   }
+  console.log("last message", status, messages.at(-1));
 
   return (
     <div className="flex flex-col w-full max-w-lg py-24 px-4 mx-auto stretch">
@@ -159,85 +168,9 @@ function ChatText(props: {
         />
       )}
       {messages.map((message) => (
-        <React.Fragment key={message.id}>
-          {message.parts.map((part, i) => {
-            switch (part.type) {
-              case "text":
-                return (
-                  <div
-                    key={`${message.id}-${i}`}
-                    className={cn(
-                      "mb-8 prose",
-                      message.role === "user"
-                        ? "bg-pink-200 rounded-md p-3 ml-auto max-w-80 w-fit"
-                        : "",
-                    )}
-                  >
-                    <ReactMarkdown
-                      components={{
-                        pre: ({ node, ref, className, children, ...props }) => {
-                          const firstChild =
-                            React.Children.toArray(children)[0];
-
-                          if (
-                            !firstChild ||
-                            typeof firstChild !== "object" ||
-                            !("props" in firstChild)
-                          ) {
-                            return (
-                              <pre ref={ref} {...props} className={className}>
-                                {children}
-                              </pre>
-                            );
-                          }
-                          const className2 = firstChild.props
-                            .className as string;
-                          const content = String(
-                            firstChild.props.children as string,
-                          );
-
-                          const match = /language-(\w+)/.exec(className2 || "");
-                          return match ? (
-                            <div>
-                              <div className="flex items-center justify-between bg-pink-200 rounded-t-md pl-3 py-1 pr-1">
-                                <div>{match[1]}</div>
-                                <CopyButton text={content} />
-                              </div>
-                              <pre
-                                ref={ref}
-                                className={"rounded-t-none"}
-                                style={{ padding: "0", margin: "0" }}
-                              >
-                                <SyntaxHighlighter
-                                  {...props}
-                                  PreTag="div"
-                                  children={content.replace(/\n$/, "")}
-                                  language={match[1]}
-                                  customStyle={{ margin: "0" }}
-                                />
-                              </pre>
-                            </div>
-                          ) : (
-                            <pre ref={ref} {...props} className={className}>
-                              {children}
-                            </pre>
-                          );
-                        },
-                      }}
-                    >
-                      {part.text}
-                    </ReactMarkdown>
-                  </div>
-                );
-            }
-          })}
-        </React.Fragment>
+        <ChatMessage key={message.id} message={message} />
       ))}
-      {status === "submitted" && (
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-pink-600" />
-        </div>
-      )}
+      {status === "submitted" && <ChatSpinner />}
       <div className={"h-10"} />
       {props.writeable && (
         <form
@@ -397,5 +330,88 @@ function CopyButton({ text }: { text: string }) {
     >
       {copied ? <CheckIcon /> : <CopyIcon />}
     </Button>
+  );
+}
+
+function ChatMessage({ message }: { message: Message }) {
+  if (
+    message.parts &&
+    message.parts.length === 1 &&
+    message.parts[0].type === "step-start"
+  )
+    return <ChatSpinner />;
+  return (
+    <>
+      {message.parts &&
+        message.parts.map((part, i) => {
+          switch (part.type) {
+            case "text":
+              return (
+                <div
+                  key={`${message.id}-${i}`}
+                  className={cn(
+                    "mb-8 prose",
+                    message.role === "user"
+                      ? "bg-pink-200 rounded-md p-3 ml-auto max-w-80 w-fit"
+                      : "min-h-8", // min height to make the height not jump after the spiner disappear
+                  )}
+                >
+                  <ReactMarkdown
+                    components={{
+                      pre: ({ node, ref, className, children, ...props }) => {
+                        const firstChild = React.Children.toArray(children)[0];
+
+                        if (
+                          !firstChild ||
+                          typeof firstChild !== "object" ||
+                          !("props" in firstChild)
+                        ) {
+                          return (
+                            <pre ref={ref} {...props} className={className}>
+                              {children}
+                            </pre>
+                          );
+                        }
+                        const className2 = firstChild.props.className as string;
+                        const content = String(
+                          firstChild.props.children as string,
+                        );
+
+                        const match = /language-(\w+)/.exec(className2 || "");
+                        return match ? (
+                          <div>
+                            <div className="flex items-center justify-between bg-pink-200 rounded-t-md pl-3 py-1 pr-1">
+                              <div>{match[1]}</div>
+                              <CopyButton text={content} />
+                            </div>
+                            <pre
+                              ref={ref}
+                              className={"rounded-t-none"}
+                              style={{ padding: "0", margin: "0" }}
+                            >
+                              <SyntaxHighlighter
+                                {...props}
+                                PreTag="div"
+                                children={content.replace(/\n$/, "")}
+                                language={match[1]}
+                                customStyle={{ margin: 0 }}
+                              />
+                            </pre>
+                          </div>
+                        ) : (
+                          <pre ref={ref} {...props} className={className}>
+                            {children}
+                          </pre>
+                        );
+                      },
+                    }}
+                  >
+                    {part.text}
+                  </ReactMarkdown>
+                </div>
+              );
+          }
+        })}
+    </>
   );
 }
