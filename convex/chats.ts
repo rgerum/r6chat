@@ -25,7 +25,16 @@ export const getChat = query({
     if (!args.chatId) {
       return null;
     }
-    return await ctx.db.get(args.chatId);
+    const chat = await ctx.db.get(args.chatId);
+    if (!chat) {
+      return null;
+    }
+    const userId = await getUserId(ctx);
+    const writeable = chat.userId === userId;
+    if (!writeable && !chat.access_public) {
+      return null;
+    }
+    return { ...chat, writeable: chat.userId === userId };
   },
 });
 
@@ -149,5 +158,33 @@ export const pinChat = mutation({
     }
     chat.pinned = args.pinned;
     await ctx.db.patch(args.chatId, chat);
+  },
+});
+
+export const updateChatReadable = mutation({
+  args: {
+    chatId: v.id("chats"),
+    access_public: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserIdOrThrow(ctx);
+    if (!userId) {
+      throw new Error("Not logged in");
+    }
+
+    const chat = await ctx.db.get(args.chatId);
+    if (!chat) {
+      throw new Error("Chat not found");
+    }
+
+    if (chat.userId !== userId) {
+      throw new Error("Not your chat");
+    }
+
+    await ctx.db.patch(args.chatId, {
+      access_public: args.access_public,
+    });
+
+    return { success: true };
   },
 });

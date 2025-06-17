@@ -19,15 +19,16 @@ import { models_definitions } from "@/lib/model-definitions";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import {
+  AlertCircle,
   ArrowUpIcon,
   CheckIcon,
   CopyIcon,
-  LucideIcon,
   SquareIcon,
 } from "lucide-react";
 import { IconType } from "@icons-pack/react-simple-icons";
-import { useRef, useEffect } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { ShareButton } from "@/components/share-button";
 
 export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
   const chatHistory = useQuery(api.chats.getChat, {
@@ -41,11 +42,18 @@ export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
           ? chatHistory?.messages.map((m) => JSON.parse(m) as Message)
           : []
       }
+      writeable={chatHistory?.writeable || false}
+      access_public={chatHistory?.access_public || false}
     />
   );
 }
 
-function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
+function ChatText(props: {
+  chatId: Id<"chats">;
+  initialMessages?: Message[];
+  writeable: boolean;
+  access_public: boolean;
+}) {
   const [model, setModel] = React.useState("gpt-4o-mini");
   const { messages, input, handleInputChange, handleSubmit, status, stop } =
     useChat({
@@ -91,6 +99,20 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
 
   return (
     <div className="flex flex-col w-full max-w-lg py-24 mx-auto stretch">
+      {props.writeable ? (
+        <div className="flex justify-end mb-4 -mt-20 sticky top-3">
+          <ShareButton
+            chatId={props.chatId}
+            access_public={props.access_public}
+          />
+        </div>
+      ) : (
+        <Alert variant="default" className="mb-4 -mt-20 sticky top-3">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>View-only mode</AlertTitle>
+          <AlertDescription>The chat has been shared with you</AlertDescription>
+        </Alert>
+      )}
       {messages.map((message) => (
         <React.Fragment key={message.id}>
           {message.parts.map((part, i) => {
@@ -172,42 +194,43 @@ function ChatText(props: { chatId: Id<"chats">; initialMessages?: Message[] }) {
         </div>
       )}
       <div className={"h-10"} />
-
-      <form
-        onSubmit={
-          status === "submitted" || status === "streaming"
-            ? handleStop
-            : handleSubmit
-        }
-        className="box-content p-4 pb-2 -ml-3 fixed bottom-0 w-full max-w-lg border-10 border-b-0 border-pink-100 rounded-t-md bg-pink-50"
-      >
-        <div className="flex flex-grow flex-row items-start mb-2">
-          <AutoResizeTextarea
-            name="input"
-            id="chat-input"
-            placeholder="Type your message here..."
-            className="w-full max-h-[200px] resize-none bg-transparent text-base leading-6 text-foreground outline-none placeholder:text-secondary-foreground/60 disabled:opacity-0 overflow-y-auto"
-            aria-label="Message input"
-            aria-describedby="chat-input-description"
-            autoComplete="off"
-            value={input}
-            onChange={handleInputChange}
-          />
-          <div id="chat-input-description" className="sr-only">
-            Press Enter to send, Shift + Enter for new line
+      {props.writeable && (
+        <form
+          onSubmit={
+            status === "submitted" || status === "streaming"
+              ? handleStop
+              : handleSubmit
+          }
+          className="box-content p-4 pb-2 -ml-3 fixed bottom-0 w-full max-w-lg border-10 border-b-0 border-pink-100 rounded-t-md bg-pink-50"
+        >
+          <div className="flex flex-grow flex-row items-start mb-2">
+            <AutoResizeTextarea
+              name="input"
+              id="chat-input"
+              placeholder="Type your message here..."
+              className="w-full max-h-[200px] resize-none bg-transparent text-base leading-6 text-foreground outline-none placeholder:text-secondary-foreground/60 disabled:opacity-0 overflow-y-auto"
+              aria-label="Message input"
+              aria-describedby="chat-input-description"
+              autoComplete="off"
+              value={input}
+              onChange={handleInputChange}
+            />
+            <div id="chat-input-description" className="sr-only">
+              Press Enter to send, Shift + Enter for new line
+            </div>
           </div>
-        </div>
-        <div className="flex gap-2">
-          <SelectModel model={model} setModel={setModel} />
-          <Button type="submit" className={"ml-auto"}>
-            {status === "ready" || status === "error" ? (
-              <ArrowUpIcon />
-            ) : (
-              <SquareIcon />
-            )}
-          </Button>
-        </div>
-      </form>
+          <div className="flex gap-2">
+            <SelectModel model={model} setModel={setModel} />
+            <Button type="submit" className={"ml-auto"}>
+              {status === "ready" || status === "error" ? (
+                <ArrowUpIcon />
+              ) : (
+                <SquareIcon />
+              )}
+            </Button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
@@ -252,9 +275,9 @@ function Icon(props: {
 function AutoResizeTextarea(
   props: React.TextareaHTMLAttributes<HTMLTextAreaElement>,
 ) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
@@ -290,7 +313,7 @@ function AutoResizeTextarea(
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (copied) {
       const timeout = setTimeout(() => {
         setCopied(false);
