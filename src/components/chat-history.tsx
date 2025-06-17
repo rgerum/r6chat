@@ -1,8 +1,8 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { Id } from "@/../convex/_generated/dataModel";
-import { api } from "@/../convex/_generated/api";
+import { Id } from "@convex/_generated/dataModel";
+import { api } from "@convex/_generated/api";
 import { Message, useChat } from "@ai-sdk/react";
 import { cn } from "@/lib/utils";
 import {

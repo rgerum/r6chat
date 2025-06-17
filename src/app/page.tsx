@@ -1,5 +1,5 @@
 import { fetchMutation } from "convex/nextjs";
-import { api } from "@/../convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { redirect } from "next/navigation";
 import { getAuthToken } from "@/app/auth";
 import { SignInButton } from "@clerk/nextjs";
@@ -13,7 +13,8 @@ export default async function Page() {
         <div className="text-center space-y-8 max-w-2xl">
           <h1 className="text-5xl font-bold text-pink-600 mb-6">R6 Chat</h1>
           <p className="text-xl text-gray-600 mb-8">
-            A modern chat interface with AI capabilities. Sign in to start chatting!
+            A modern chat interface with AI capabilities. Sign in to start
+            chatting!
           </p>
           <div className="flex justify-center">
             <SignInButton mode="modal">

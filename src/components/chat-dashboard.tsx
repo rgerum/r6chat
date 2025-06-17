@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Id } from "@/../convex/_generated/dataModel";
+import { Id } from "@convex/_generated/dataModel";
 import { ChatHistoryWrapper } from "@/components/chat-history";
 
 export default function ChatDashboard(props: { chatId?: string }) {

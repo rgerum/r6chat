@@ -10,9 +10,9 @@ import {
   useUser,
 } from "@clerk/nextjs";
 import Link from "next/link";
-import { Id } from "../../convex/_generated/dataModel";
+import { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { useRouter } from "next/navigation";

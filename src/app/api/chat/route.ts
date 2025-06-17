@@ -123,8 +123,8 @@ export async function POST(req: Request) {
 }
 
 import { Message } from "ai";
-import { api } from "../../../../convex/_generated/api";
-import { Id } from "../../../../convex/_generated/dataModel";
+import { api } from "@convex/_generated/api";
+import { Id } from "@convex/_generated/dataModel";
 import { getAuthToken } from "@/app/auth";
 import { getModelInstance, getModelProvider } from "@/lib/model-instance";
 import { after } from "next/server";

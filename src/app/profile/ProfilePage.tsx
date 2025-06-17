@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "@/../convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { useUser, useClerk, useAuth } from "@clerk/nextjs";
 import { useState } from "react";
 import { Trash2, Plus, ArrowLeft, LogOut, UserX } from "lucide-react";
@@ -23,7 +23,7 @@ import { models_definitions } from "@/lib/model-definitions";
 
 // Get unique providers from models_definitions
 const MODEL_PROVIDERS = Array.from(
-  new Set(models_definitions.map((def) => def.provider))
+  new Set(models_definitions.map((def) => def.provider)),
 ).map((provider) => {
   const def = models_definitions.find((d) => d.provider === provider)!;
   return {
@@ -74,34 +74,38 @@ export default function ProfilePage() {
   const router = useRouter();
 
   const handleSignOut = () => {
-    signOut(() => router.push('/'));
+    signOut(() => router.push("/"));
   };
 
   const handleDeleteAccount = async () => {
-    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete your account? This action cannot be undone.",
+      )
+    ) {
       return;
     }
 
     try {
       const token = await getToken();
-      const response = await fetch('/api/delete-account', {
-        method: 'POST',
+      const response = await fetch("/api/delete-account", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete account');
+        throw new Error("Failed to delete account");
       }
 
       await signOut();
-      router.push('/');
-      toast.success('Your account has been deleted successfully');
+      router.push("/");
+      toast.success("Your account has been deleted successfully");
     } catch (error) {
-      console.error('Error deleting account:', error);
-      toast.error('Failed to delete account. Please try again.');
+      console.error("Error deleting account:", error);
+      toast.error("Failed to delete account. Please try again.");
     }
   };
 
@@ -147,7 +151,7 @@ export default function ProfilePage() {
                 className="mt-1 max-w-md"
               />
             </div>
-            
+
             <div className="pt-4 border-t">
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
@@ -182,9 +186,11 @@ export default function ProfilePage() {
         <CardContent>
           <div className="space-y-6">
             {MODEL_PROVIDERS.map((provider) => {
-              const existingKey = apiKeys?.find(k => k.modelProvider === provider.id);
+              const existingKey = apiKeys?.find(
+                (k) => k.modelProvider === provider.id,
+              );
               const [isEditing, setIsEditing] = useState(false);
-              const [apiKey, setApiKey] = useState(existingKey?.apiKey || '');
+              const [apiKey, setApiKey] = useState(existingKey?.apiKey || "");
 
               const handleSave = async (e: React.FormEvent) => {
                 e.preventDefault();
@@ -197,7 +203,7 @@ export default function ProfilePage() {
                   });
                   setIsEditing(false);
                 } catch (error) {
-                  console.error('Failed to save API key:', error);
+                  console.error("Failed to save API key:", error);
                 }
               };
 
@@ -211,11 +217,11 @@ export default function ProfilePage() {
                         size="sm"
                         onClick={() => setIsEditing(true)}
                       >
-                        {existingKey ? 'Edit' : 'Add Key'}
+                        {existingKey ? "Edit" : "Add Key"}
                       </Button>
                     )}
                   </div>
-                  
+
                   {isEditing ? (
                     <form onSubmit={handleSave} className="space-y-3">
                       <div className="flex items-center gap-2">
@@ -231,7 +237,7 @@ export default function ProfilePage() {
                           variant="outline"
                           type="button"
                           onClick={() => {
-                            setApiKey(existingKey?.apiKey || '');
+                            setApiKey(existingKey?.apiKey || "");
                             setIsEditing(false);
                           }}
                         >
@@ -244,9 +250,14 @@ export default function ProfilePage() {
                       <div className="text-muted-foreground">
                         {existingKey ? (
                           <div className="flex items-center gap-2">
-                            <span className="text-green-500">••••••••••••••••</span>
+                            <span className="text-green-500">
+                              ••••••••••••••••
+                            </span>
                             <span className="text-xs text-muted-foreground">
-                              Updated {new Date(existingKey.updatedAt).toLocaleDateString()}
+                              Updated{" "}
+                              {new Date(
+                                existingKey.updatedAt,
+                              ).toLocaleDateString()}
                             </span>
                           </div>
                         ) : (
