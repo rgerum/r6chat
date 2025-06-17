@@ -67,6 +67,9 @@ export const addChat = mutation({
     return await ctx.db.insert("chats", {
       userId,
       messages: [],
+      pinned: false,
+      lastUpdate: Date.now(),
+      access_public: false,
     });
   },
 });

@@ -1,7 +1,6 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { dark as codeStyle } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Id } from "@/../convex/_generated/dataModel";
 import { api } from "@/../convex/_generated/api";
 import { Message, useChat } from "@ai-sdk/react";
@@ -29,6 +28,7 @@ import { IconType } from "@icons-pack/react-simple-icons";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ShareButton } from "@/components/share-button";
+import { EmptyState } from "@/components/empty-state";
 
 export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
   const chatHistory = useQuery(api.chats.getChat, {
@@ -42,8 +42,8 @@ export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
           ? chatHistory?.messages.map((m) => JSON.parse(m) as Message)
           : []
       }
-      writeable={chatHistory?.writeable || false}
-      access_public={chatHistory?.access_public || false}
+      writeable={chatHistory?.writeable ?? true}
+      access_public={chatHistory?.access_public ?? false}
     />
   );
 }
@@ -100,7 +100,7 @@ function ChatText(props: {
   return (
     <div className="flex flex-col w-full max-w-lg py-24 mx-auto stretch">
       {props.writeable ? (
-        <div className="flex justify-end mb-4 -mt-20 sticky top-3">
+        <div className="flex justify-end mb-4 -mt-20 sticky top-4">
           <ShareButton
             chatId={props.chatId}
             access_public={props.access_public}
@@ -112,6 +112,15 @@ function ChatText(props: {
           <AlertTitle>View-only mode</AlertTitle>
           <AlertDescription>The chat has been shared with you</AlertDescription>
         </Alert>
+      )}
+      {messages.length === 0 && (
+        <EmptyState
+          hasInput={!!input}
+          onSuggestionClick={(suggestion) => {
+            // Handle suggestion click
+            console.log("Selected suggestion:", suggestion);
+          }}
+        />
       )}
       {messages.map((message) => (
         <React.Fragment key={message.id}>
