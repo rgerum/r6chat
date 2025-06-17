@@ -139,6 +139,7 @@ function ChatText(props: {
     e.preventDefault();
     stop();
   }
+  console.log(messages);
 
   return (
     <div className="flex flex-col w-full max-w-lg py-24 px-4 mx-auto stretch">
@@ -343,6 +344,24 @@ function ChatMessage({ message }: { message: Message }) {
       {message.parts &&
         message.parts.map((part, i) => {
           switch (part.type) {
+            case "file":
+              return (
+                <div
+                  key={`${message.id}-${i}`}
+                  className="mb-8 flex items-center gap-2"
+                >
+                  <span className="text-sm text-pink-800">
+                    {part.mimeType === "image/jpeg" && (
+                      <img
+                        src={part.data}
+                        alt="Image"
+                        width={200}
+                        height={200}
+                      />
+                    )}
+                  </span>
+                </div>
+              );
             case "text":
               return (
                 <div
@@ -406,6 +425,20 @@ function ChatMessage({ message }: { message: Message }) {
                   >
                     {part.text}
                   </ReactMarkdown>
+                  {message.experimental_attachments && (
+                    <div className="flex gap-2">
+                      {message.experimental_attachments.map((a) => (
+                        <>
+                          {a.contentType?.split("/")[0] === "image" && (
+                            <img
+                              src={a.url}
+                              style={{ margin: 0, maxHeight: "300px" }}
+                            />
+                          )}
+                        </>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
           }
