@@ -29,6 +29,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ShareButton } from "@/components/share-button";
 import { EmptyState } from "@/components/empty-state";
+import { UploadButton } from "@/components/upload-button";
 
 export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
   const chatHistory = useQuery(api.chats.getChat, {
@@ -238,6 +239,25 @@ function ChatText(props: {
           </div>
           <div className="flex gap-2">
             <SelectModel model={model} setModel={setModel} />
+            <UploadButton
+              chatId={props.chatId}
+              onUpload={(image: string) => {
+                append(
+                  {
+                    role: "user",
+                    content: "Describe the image in detail.", // Just a simple string
+                  },
+                  {
+                    experimental_attachments: [
+                      {
+                        contentType: "image/jpeg",
+                        url: image,
+                      },
+                    ],
+                  },
+                );
+              }}
+            />
             <Button type="submit" className={"ml-auto"}>
               {status === "ready" || status === "error" ? (
                 <ArrowUpIcon />

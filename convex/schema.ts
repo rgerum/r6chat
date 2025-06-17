@@ -26,4 +26,20 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user_provider", ["userId", "modelProvider"]),
+
+  // In your message document
+  messages: defineTable({
+    chatId: v.id("chats"),
+    role: v.string(),
+    content: v.string(),
+    // ... other fields
+    attachments: v.optional(
+      v.array(
+        v.object({
+          storageId: v.id("_storage"),
+          type: v.string(),
+        }),
+      ),
+    ),
+  }),
 });
