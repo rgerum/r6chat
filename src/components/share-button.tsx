@@ -30,10 +30,24 @@ export function ShareButton({
 }) {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const accessLevel = access_public ? "public" : "private";
-  //const [accessLevel, setAccessLevel] = useState<'private' | 'public'>('private');
   const [isCopied, setIsCopied] = useState(false);
 
-  const updateChatReadable = useMutation(api.chats.updateChatReadable);
+  const updateChatReadable = useMutation(
+    api.chats.updateChatReadable,
+  ).withOptimisticUpdate(
+    (localStore, { chatId, access_public: newAccessPublic }) => {
+      // Get the current value from the local store
+      const current = localStore.getQuery(api.chats.getChat, { chatId });
+      if (current) {
+        // Update the local copy with the new value
+        localStore.setQuery(
+          api.chats.getChat,
+          { chatId },
+          { ...current, access_public: newAccessPublic },
+        );
+      }
+    },
+  );
 
   const shareLink = `${window.location.origin}/chat/${chatId}`;
 
