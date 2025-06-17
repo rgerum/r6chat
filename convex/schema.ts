@@ -15,7 +15,9 @@ export default defineSchema({
     lastUpdate: v.optional(v.number()),
     pinned: v.optional(v.boolean()),
     access_public: v.optional(v.boolean()),
-  }).index("by_user", ["userId", "lastUpdate"]),
+  })
+    .index("by_user_creation_time", ["userId"])
+    .index("by_user_lastUpdate", ["userId", "lastUpdate"]),
 
   userApiKeys: defineTable({
     userId: v.string(),

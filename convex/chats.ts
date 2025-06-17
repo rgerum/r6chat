@@ -11,7 +11,7 @@ export const getChats = query({
     }
     return await ctx.db
       .query("chats")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .withIndex("by_user_lastUpdate", (q) => q.eq("userId", userId))
       .order("desc")
       .collect();
   },
@@ -58,7 +58,7 @@ export const addChat = mutation({
     // if the newest chat is still empty, use this as a new chat
     const chat = await ctx.db
       .query("chats")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .withIndex("by_user_creation_time", (q) => q.eq("userId", userId))
       .order("desc")
       .first();
     if (chat && chat.messages.length == 0) {

@@ -11,17 +11,17 @@ export const deleteAllUserData = mutation({
       .query("userApiKeys")
       .withIndex("by_user_provider", (q) => q.eq("userId", args.userId))
       .collect();
-    
-    await Promise.all(userKeys.map(key => ctx.db.delete(key._id)));
-    
+
+    await Promise.all(userKeys.map((key) => ctx.db.delete(key._id)));
+
     // Delete all chats for the user
     const userChats = await ctx.db
       .query("chats")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user_lastUpdate", (q) => q.eq("userId", args.userId))
       .collect();
-      
-    await Promise.all(userChats.map(chat => ctx.db.delete(chat._id)));
-    
+
+    await Promise.all(userChats.map((chat) => ctx.db.delete(chat._id)));
+
     return { success: true };
   },
 });
