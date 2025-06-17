@@ -86,7 +86,30 @@ function ChatText(props: {
     void triggerAddChat();
   }, [props.chatId]);
 
+  // Add this state to track scroll position
+  const [isAtBottom, setIsAtBottom] = React.useState(true);
+
+  // Update the scroll effect
   React.useEffect(() => {
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } =
+        document.documentElement;
+      const isBottom = scrollHeight - (scrollTop + clientHeight) < 0; // 100px threshold
+      setIsAtBottom(isBottom);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  React.useEffect(() => {
+    window.scrollTo({
+      top: document.body.scrollHeight,
+    });
+  }, [props.chatId]);
+
+  React.useEffect(() => {
+    if (!isAtBottom) return;
     window.scrollTo({
       top: document.body.scrollHeight,
       //behavior: "smooth", // Optional: adds smooth scrolling
