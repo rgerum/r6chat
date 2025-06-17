@@ -55,13 +55,20 @@ function ChatText(props: {
   access_public: boolean;
 }) {
   const [model, setModel] = React.useState("gpt-4o-mini");
-  const { messages, input, handleInputChange, handleSubmit, status, stop } =
-    useChat({
-      id: props.chatId,
-      initialMessages: props.initialMessages,
-      sendExtraMessageFields: true,
-      body: { model },
-    });
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    status,
+    stop,
+    append,
+  } = useChat({
+    id: props.chatId,
+    initialMessages: props.initialMessages,
+    sendExtraMessageFields: true,
+    body: { model },
+  });
 
   const addChat = useMutation(api.chats.addChat);
   const router = useRouter();
@@ -118,6 +125,7 @@ function ChatText(props: {
           hasInput={!!input}
           onSuggestionClick={(suggestion) => {
             // Handle suggestion click
+            void append({ role: "user", content: suggestion });
             console.log("Selected suggestion:", suggestion);
           }}
         />
