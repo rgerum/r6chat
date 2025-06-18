@@ -49,9 +49,8 @@ function getText(
 
 export async function POST(req: Request) {
   const { messages, id, model, retry_options } = await req.json();
-  console.log("retry_options", retry_options);
 
-  if (retry_options.id) {
+  if (retry_options?.id) {
     for (const i in messages) {
       if (messages[i].id === retry_options.id) {
         if (messages[i].role === "user") {
@@ -62,12 +61,9 @@ export async function POST(req: Request) {
         break;
       }
     }
-    console.log("retry_options", messages);
   }
   //return null;
   const token = await getAuthToken();
-
-  console.log("model", model);
 
   if (!token) {
     return new Response("Unauthorized", { status: 401 });
@@ -113,7 +109,7 @@ export async function POST(req: Request) {
     messages,
   });
   after(async () => saveChatPromise);
-  console.log("messages", messages);
+
   if (!title) {
     const result = streamText({
       model: modelInstance,
@@ -211,6 +207,7 @@ import { getModelInstance, getModelProvider } from "@/lib/model-instance";
 import { after } from "next/server";
 import { z } from "zod";
 import { getModelProperties } from "@/lib/model-definitions";
+import { google } from "@ai-sdk/google";
 
 export async function saveTitle({
   id,

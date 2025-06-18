@@ -93,6 +93,9 @@ function ChatText(props: {
   const apiKeys = useQuery(api.userApiKeys.getUserApiKeysMasked);
   function checkModelKey(model: string) {
     const provider = getModelProvider(model);
+    if (getModelProperties(model).image_generation) {
+      return apiKeys?.find((k) => k.modelProvider === provider);
+    }
     return apiKeys?.find(
       (k) => k.modelProvider === provider || k.modelProvider === "openrouter",
     );
@@ -243,7 +246,7 @@ function ChatText(props: {
       setAttachFile(null);
     } else handleSubmit(e);
   }
-  console.log(messages);
+
   function retryMessage(id: string) {
     retry_options.id = id;
     // remove all messages up to the retry id
@@ -789,7 +792,6 @@ function ChatMessage({
                               className="h-6 w-6 p-1 text-muted-foreground hover:text-foreground"
                               onClick={() => {
                                 retryMessage(message.id);
-                                console.log("Retry message", message.id);
                               }}
                             >
                               <RefreshCw className="h-3.5 w-3.5" />

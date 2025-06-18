@@ -19,7 +19,7 @@ export type ModelDefinition = {
   }[];
 };
 
-export const models_definitions = [
+export const models_definitions: ModelDefinition[] = [
   {
     // https://platform.openai.com/docs/models
     label: "OpenAI",
@@ -34,7 +34,7 @@ export const models_definitions = [
         websearch: true,
         attachments: true,
       },
-      { value: "gpt-image-1", label: "gpt-image-1", image_generation: true },
+      //{ value: "gpt-image-1", label: "gpt-image-1", image_generation: true },
     ],
   },
   {

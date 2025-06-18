@@ -163,7 +163,8 @@ export default function ProfilePage() {
               />
               <p>
                 Or a provider-specific API key. If both are provided, the
-                provider-specific API key will be used.
+                provider-specific API key will be used. NOTE: for image
+                generation models, only the provider-specific API key will work.
               </p>
               {MODEL_PROVIDERS.map((provider) => (
                 <ProviderKey

@@ -1,4 +1,7 @@
-import { models_definitions } from "@/lib/model-definitions";
+import {
+  getModelProperties,
+  models_definitions,
+} from "@/lib/model-definitions";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createAnthropic } from "@ai-sdk/anthropic";
@@ -19,11 +22,15 @@ export function getModelInstance(
   if (!args && !argsOpenRouter) {
     throw new Error("No API key provided");
   }
+  const properties = getModelProperties(model_name);
   if (!args) {
+    if (properties.image_generation)
+      throw new Error("No image generation with open router");
     const provider = getModelProvider(model_name);
     const openrouter = createOpenRouter(argsOpenRouter);
     return openrouter.chat(provider + "/" + model_name);
   }
+
   switch (getModelProvider(model_name)) {
     case "openai":
       return createOpenAI(args)(model_name);
