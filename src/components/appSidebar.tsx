@@ -16,7 +16,7 @@ import { api } from "@convex/_generated/api";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { PinIcon, PinOffIcon, XIcon, UserIcon } from "lucide-react";
+import { PinIcon, PinOffIcon, XIcon, UserIcon, GitBranch } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -161,6 +161,9 @@ function ChatLink(props: {
         router.push(`/chat/${props.chat._id}`);
       }}
     >
+      {props.chat.branched && (
+        <GitBranch className="w-3 h-3 inline-block mr-1" />
+      )}
       <MouseDownLink href={`/chat/${props.chat._id}`}>
         {props.chat.title || "..."}
       </MouseDownLink>

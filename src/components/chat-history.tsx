@@ -198,7 +198,7 @@ function ChatText(props: {
         />
       )}
       {messages.map((message) => (
-        <ChatMessage key={message.id} message={message} />
+        <ChatMessage key={message.id} chatId={props.chatId} message={message} />
       ))}
       {status === "submitted" && <ChatSpinner />}
       <div className={"h-10"} />
@@ -416,13 +416,29 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-function ChatMessage({ message }: { message: Message }) {
+function useBranchMutation() {
+  const branchChat = useMutation(api.chats.branchChat);
+  const router = useRouter();
+  return async (chatId: Id<"chats">, messageId: string) => {
+    const newChatId = await branchChat({ chatId, messageId });
+    router.push(`/chat/${newChatId}`);
+  };
+}
+
+function ChatMessage({
+  chatId,
+  message,
+}: {
+  chatId: Id<"chats">;
+  message: Message;
+}) {
   if (
     message.parts &&
     message.parts.length === 1 &&
     message.parts[0].type === "step-start"
   )
     return <ChatSpinner />;
+  const branchChat = useBranchMutation();
   return (
     <>
       {message.parts &&
@@ -511,8 +527,8 @@ function ChatMessage({ message }: { message: Message }) {
                   </ReactMarkdown>
                   {message.experimental_attachments && (
                     <div className="flex flex-col gap-2">
-                      {message.experimental_attachments.map((a) => (
-                        <>
+                      {message.experimental_attachments.map((a, i) => (
+                        <React.Fragment key={i}>
                           {a.contentType?.startsWith("image/") ? (
                             <img
                               src={a.url}
@@ -539,7 +555,7 @@ function ChatMessage({ message }: { message: Message }) {
                               <span>View file</span>
                             </a>
                           )}
-                        </>
+                        </React.Fragment>
                       ))}
                     </div>
                   )}
@@ -568,7 +584,7 @@ function ChatMessage({ message }: { message: Message }) {
                             size="icon"
                             className="h-6 w-6 p-1 text-muted-foreground hover:text-foreground"
                             onClick={() => {
-                              // TODO: Implement branch functionality
+                              void branchChat(chatId, message.id);
                               console.log("Branch from message", message.id);
                             }}
                           >
@@ -596,6 +612,10 @@ function ChatMessage({ message }: { message: Message }) {
                           <TooltipContent>Regenerate response</TooltipContent>
                         </Tooltip>
                       )}
+
+                      <span className="text-xs text-muted-foreground ml-1">
+                        {message.model}
+                      </span>
                     </div>
                   )}
                 </div>

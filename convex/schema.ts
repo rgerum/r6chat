@@ -14,6 +14,7 @@ export default defineSchema({
     messages: v.array(v.string()),
     lastUpdate: v.optional(v.number()),
     pinned: v.optional(v.boolean()),
+    branched: v.optional(v.id("chats")),
     access_public: v.optional(v.boolean()),
   })
     .index("by_user_creation_time", ["userId"])

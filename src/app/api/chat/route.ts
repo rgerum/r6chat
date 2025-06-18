@@ -115,6 +115,7 @@ export async function POST(req: Request) {
           messages,
           responseMessages: response.messages,
         }),
+        model: response.modelId,
       });
     },
     tools: {
@@ -167,10 +168,12 @@ export async function saveChat({
   id,
   messages,
   token,
+  model,
 }: {
   id: string; // chats;
   messages: Message[];
   token: string;
+  model?: string;
 }): Promise<void> {
   await fetchMutation(
     api.chats.addMessageToChat,

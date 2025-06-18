@@ -191,3 +191,36 @@ export const updateChatReadable = mutation({
     return { success: true };
   },
 });
+
+export const branchChat = mutation({
+  args: {
+    chatId: v.id("chats"),
+    messageId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserIdOrThrow(ctx);
+    if (!userId) {
+      throw new Error("Not logged in");
+    }
+    let chat = await ctx.db.get(args.chatId);
+    if (!chat) {
+      throw new Error("Chat not found");
+    }
+    if (chat.userId !== userId) {
+      throw new Error("Not your chat");
+    }
+    const newMessages = [];
+    for (let i = 0; i < chat.messages.length; i++) {
+      const message = chat.messages[i];
+      newMessages.push(message);
+      if (JSON.parse(message).id === args.messageId) {
+        break;
+      }
+    }
+    chat.messages = newMessages;
+    chat.lastUpdate = Date.now();
+    chat.branched = chat._id;
+    const { _id, _creationTime, ...rest } = chat;
+    return await ctx.db.insert("chats", rest);
+  },
+});
