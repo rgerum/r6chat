@@ -1,10 +1,24 @@
 import {
+  IconType,
   SiAnthropic,
   SiGooglegemini,
   SiOpenai,
 } from "@icons-pack/react-simple-icons";
 import * as React from "react";
 import { SiDeepSeek } from "./icons";
+
+export type ModelDefinition = {
+  label: string;
+  provider: string;
+  icon: IconType;
+  options: {
+    value: string;
+    label: string;
+    websearch?: boolean;
+    attachments?: boolean;
+    image_generation?: boolean;
+  }[];
+};
 
 export const models_definitions = [
   {
@@ -13,9 +27,15 @@ export const models_definitions = [
     provider: "openai",
     icon: SiOpenai,
     options: [
-      { value: "gpt-4", label: "gpt-4" },
+      { value: "gpt-4", label: "gpt-4", websearch: true },
       { value: "gpt-4o", label: "gpt-4o" },
-      { value: "gpt-4o-mini", label: "gpt-4o-mini" },
+      {
+        value: "gpt-4o-mini",
+        label: "gpt-4o-mini",
+        websearch: true,
+        attachments: true,
+      },
+      { value: "gpt-image-1", label: "gpt-image-1", image_generation: true },
     ],
   },
   {
@@ -30,6 +50,11 @@ export const models_definitions = [
       {
         value: "gemini-2.0-flash-lite",
         label: "Gemini 2.0 Flash-Lite",
+      },
+      {
+        value: "gemini-2.0-flash-exp",
+        label: "Gemini 2.0 Flash-Exp",
+        image_generation: true,
       },
     ],
   },
@@ -53,3 +78,16 @@ export const models_definitions = [
     options: [{ value: "deepseek-chat", label: "DeepSeek Chat" }],
   },
 ];
+
+export function getModelProperties(model_name: string) {
+  for (const definition of models_definitions)
+    for (const model of definition.options)
+      if (model.value === model_name)
+        return {
+          provider: definition.provider,
+          websearch: !!model.websearch,
+          attachments: !!model.attachments,
+          image_generation: !!model.image_generation,
+        };
+  throw new Error(`Unknown model: ${model_name}`);
+}

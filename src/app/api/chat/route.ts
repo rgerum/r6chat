@@ -7,9 +7,11 @@ import { openai } from "@ai-sdk/openai";
 import {
   appendResponseMessages,
   FilePart,
+  generateText,
   streamText,
   TextPart,
   ToolCallPart,
+  ToolSet,
 } from "ai";
 
 class RedactedReasoningPart {}
@@ -47,7 +49,7 @@ function getText(
 }
 
 export async function POST(req: Request) {
-  const { messages, id, model } = await req.json();
+  const { messages, id, model, websearch } = await req.json();
 
   const token = await getAuthToken();
 
@@ -76,6 +78,7 @@ export async function POST(req: Request) {
     },
   );
 
+  const modelDefinition = getModelProperties(model);
   const modelInstance = getModelInstance(model, { apiKey });
   if (!modelInstance) throw new Error("model not found");
 
@@ -86,7 +89,7 @@ export async function POST(req: Request) {
     messages,
   });
   after(async () => saveChatPromise);
-
+  console.log("messages", messages);
   if (!title) {
     const result = streamText({
       model: modelInstance,
@@ -103,6 +106,51 @@ export async function POST(req: Request) {
     });
     void result.consumeStream();
   }
+  if (modelDefinition.image_generation) {
+    const result = await generateText({
+      model: modelInstance,
+      providerOptions: {
+        google: { responseModalities: ["TEXT", "IMAGE"] },
+        openai: { responseModalities: ["TEXT", "IMAGE"] },
+      },
+      messages: messages,
+    });
+    return new Response(JSON.stringify(result.response), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const tools: ToolSet = {
+    getWebsiteContent: {
+      description: "search the web",
+      parameters: z.object({ url: z.string() }),
+      execute: async (args: { url: string }) => {
+        const response = await fetch(args.url);
+        const text = await response.text();
+        return text;
+      },
+    },
+    getDate: {
+      description: "get the today's date",
+      parameters: z.object({}),
+      execute: async () => {
+        return new Date().toISOString();
+      },
+    },
+  };
+  /* // it seems this isn't working
+  if (websearch && modelDefinition.websearch) {
+    console.log("websearch");
+    tools["web_search_preview"] = openai.tools.webSearchPreview({
+      // optional configuration:
+      searchContextSize: "high",
+      userLocation: {
+        type: "approximate",
+        city: "San Francisco",
+        region: "California",
+      },
+    });
+  }*/
 
   const result = streamText({
     model: modelInstance,
@@ -118,19 +166,14 @@ export async function POST(req: Request) {
         model: response.modelId,
       });
     },
-    tools: {
-      // server-side tool with execute function:
-      getWebsiteContent: {
-        description: "search the web",
-        parameters: z.object({ url: z.string() }),
-        execute: async (args: { url: string }) => {
-          const response = await fetch(args.url);
-          const text = await response.text();
-          return text;
-        },
-      },
+    tools: tools,
+    maxSteps: 5,
+    providerOptions: {
+      google: { responseModalities: ["TEXT", "IMAGE"] },
+      //openai: { responseModalities: ["TEXT", "IMAGE"] },
+      //anthropic: { responseModalities: ["TEXT", "IMAGE"] },
+      //deepseek: { responseModalities: ["TEXT", "IMAGE"] },
     },
-    maxSteps: 2,
   });
 
   return result.toDataStreamResponse();
@@ -143,6 +186,8 @@ import { getAuthToken } from "@/app/auth";
 import { getModelInstance, getModelProvider } from "@/lib/model-instance";
 import { after } from "next/server";
 import { z } from "zod";
+import { getModelProperties } from "@/lib/model-definitions";
+import { google } from "@ai-sdk/google";
 
 export async function saveTitle({
   id,

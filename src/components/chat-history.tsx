@@ -14,7 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { models_definitions } from "@/lib/model-definitions";
+import {
+  getModelProperties,
+  models_definitions,
+} from "@/lib/model-definitions";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import {
@@ -23,6 +26,7 @@ import {
   CheckIcon,
   CopyIcon,
   FileText,
+  GlobeIcon,
   SquareIcon,
   XIcon,
 } from "lucide-react";
@@ -39,6 +43,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import remarkGfm from "remark-gfm";
+import { appendResponseMessages } from "ai";
+import { v4 as uuidv4 } from "uuid";
 
 export function ChatHistoryWrapper(props: {
   chatId: Id<"chats"> | undefined;
@@ -82,8 +88,13 @@ function ChatText(props: {
   newChat: boolean;
 }) {
   const [model, setModel] = React.useState("gpt-4o-mini");
+  const [attachFile, setAttachFile] = React.useState<FileList | null>(null);
+  const [webSearch, setWebSearch] = React.useState(false);
+  const modelDefinition = getModelProperties(model);
   const {
+    reload,
     messages,
+    setMessages,
     input,
     setInput,
     handleInputChange,
@@ -95,8 +106,17 @@ function ChatText(props: {
     id: props.chatId,
     initialMessages: props.initialMessages,
     sendExtraMessageFields: true,
-    body: { model },
+    body: {
+      model,
+      websearch: webSearch && modelDefinition.websearch,
+    },
   });
+  const [statusImageGeneration, setStatusImageGeneration] = React.useState<
+    "streaming" | "error" | "submitted" | "ready"
+  >("ready");
+  const myStatus = modelDefinition.image_generation
+    ? statusImageGeneration
+    : status;
 
   const addChat = useMutation(api.chats.addChat);
   const router = useRouter();
@@ -115,7 +135,6 @@ function ChatText(props: {
 
   // Add this state to track scroll position
   const [isAtBottom, setIsAtBottom] = React.useState(true);
-  const [attachFile, setAttachFile] = React.useState<FileList | null>(null);
 
   // Update the scroll effect
   React.useEffect(() => {
@@ -148,15 +167,59 @@ function ChatText(props: {
         m.parts.map((p) => (p.type === "text" ? p.text : "")).join(""),
       )
       .join(""),
-    status,
+    myStatus,
   ]);
 
   function handleStop(e: { preventDefault: () => void }) {
     e.preventDefault();
     stop();
   }
-  function handleSubmitWrapper(e: { preventDefault: () => void }) {
+
+  async function handleSubmitWrapper(e: { preventDefault: () => void }) {
     e.preventDefault();
+    if (modelDefinition.image_generation) {
+      setInput("");
+      setStatusImageGeneration("submitted");
+      const newMessage = {
+        id: uuidv4(),
+        role: "user" as const,
+        content: input,
+      };
+
+      setMessages([...messages, newMessage]);
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model,
+            id: props.chatId,
+            messages: [
+              ...messages.map((m) => ({
+                role: m.role,
+                content: m.parts
+                  .map((p) => (p.type === "text" ? p.text : ""))
+                  .join(""),
+              })),
+              newMessage,
+            ],
+          }),
+        });
+        const data = await response.json();
+        setMessages(
+          appendResponseMessages({
+            messages: [...messages, newMessage],
+            responseMessages: data.messages,
+          }),
+        );
+        setStatusImageGeneration("ready");
+      } catch {
+        setStatusImageGeneration("error");
+      }
+      return;
+    }
     if (attachFile) {
       append(
         {
@@ -201,12 +264,24 @@ function ChatText(props: {
       {messages.map((message) => (
         <ChatMessage key={message.id} chatId={props.chatId} message={message} />
       ))}
-      {status === "submitted" && <ChatSpinner />}
+      {myStatus === "submitted" && <ChatSpinner />}
+      {myStatus === "error" && (
+        <div className="mx-auto max-w-3xl px-4 mb-4">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              An error occurred while sending your message. Please try
+              again.{" "}
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
       <div className={"h-10"} />
       {props.writeable && (
         <form
           onSubmit={
-            status === "submitted" || status === "streaming"
+            myStatus === "submitted" || myStatus === "streaming"
               ? handleStop
               : handleSubmitWrapper
           }
@@ -230,6 +305,18 @@ function ChatText(props: {
           </div>
           <div className="flex gap-2">
             <SelectModel model={model} setModel={setModel} />
+            {/*modelDefinition.websearch && (
+              <Button
+                type="button"
+                variant={webSearch ? "default" : "outline"}
+                onClick={() => setWebSearch(!webSearch)}
+                title={webSearch ? "Disable web search" : "Enable web search"}
+                className="flex items-center justify-center h-10"
+              >
+                <GlobeIcon />
+                Search
+              </Button>
+            )*/}
             <UploadButton
               chatId={props.chatId}
               onUpload={(file: File) => {
@@ -248,7 +335,7 @@ function ChatText(props: {
               }}
             />
             <Button type="submit" className={"ml-auto"}>
-              {status === "ready" || status === "error" ? (
+              {myStatus === "ready" || myStatus === "error" ? (
                 <ArrowUpIcon />
               ) : (
                 <SquareIcon />
@@ -452,12 +539,12 @@ function ChatMessage({
                   className="mb-8 flex items-center gap-2"
                 >
                   <span className="text-sm text-pink-800">
-                    {part.mimeType === "image/jpeg" && (
+                    {part.mimeType?.startsWith("image/") && (
                       <img
-                        src={part.data}
-                        alt="Image"
-                        width={200}
-                        height={200}
+                        src={`data:${part.mimeType};base64,${part.data}`}
+                        alt="Generated content"
+                        className="max-w-full h-auto rounded-md"
+                        style={{ maxHeight: "400px" }}
                       />
                     )}
                   </span>
@@ -587,7 +674,6 @@ function ChatMessage({
                             className="h-6 w-6 p-1 text-muted-foreground hover:text-foreground"
                             onClick={() => {
                               void branchChat(chatId, message.id);
-                              console.log("Branch from message", message.id);
                             }}
                           >
                             <GitBranch className="h-3.5 w-3.5" />
