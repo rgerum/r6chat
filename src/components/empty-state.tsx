@@ -69,10 +69,10 @@ const SUGGESTION_SETS = {
     "What's the next version of React?",
     "Explore the benefits of keeping my data private",
     "Reasons to use an AI editor",
-    "What are the coolest types in TypeScript?",
+    "Skateboard tricks for React developers",
   ],
   code: [
-    "Show me how to properly type a Next.js API route with TypeScript",
+    "Give me an example of an optimistic Convex mutation",
     "Help me debug this React hook dependency array",
     "Explain the T3 stack architecture like I'm five",
     "Convert this JavaScript snippet to TypeScript",
