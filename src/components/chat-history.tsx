@@ -280,7 +280,7 @@ function ChatText(props: {
           />
         </div>
       ) : (
-        <Alert variant="default" className="mb-4 -mt-20 sticky top-3">
+        <Alert variant="default" className="mb-4 -mt-20 sticky top-3 z-50">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>View-only mode</AlertTitle>
           <AlertDescription>The chat has been shared with you</AlertDescription>
