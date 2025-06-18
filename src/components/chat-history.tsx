@@ -340,7 +340,11 @@ function ChatText(props: {
               "flex items-center transition delay-1000 gap-2 absolute -top-6 left-1/2 -translate-x-1/2 -translate-y-full text-xs bg-pink-100 px-4 py-2 rounded-full",
               isAtBottom && "pointer-events-none delay-0 opacity-0",
             )}
-            onClick={doScrollToBottom}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              doScrollToBottom();
+            }}
           >
             Scroll to bottom <ChevronDown size={16} />
           </button>
