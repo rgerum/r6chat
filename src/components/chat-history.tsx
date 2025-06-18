@@ -48,7 +48,6 @@ import { appendResponseMessages } from "ai";
 import { v4 as uuidv4 } from "uuid";
 import Link from "next/link";
 import { getModelProvider } from "@/lib/model-instance";
-import { getUserApiKeysMasked } from "@convex/userApiKeys";
 
 export function ChatHistoryWrapper(props: {
   chatId: Id<"chats"> | undefined;

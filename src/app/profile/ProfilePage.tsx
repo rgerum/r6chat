@@ -21,7 +21,6 @@ import { toast } from "sonner";
 
 import { models_definitions } from "@/lib/model-definitions";
 import { Id } from "@convex/_generated/dataModel";
-import { getUserApiKeysMasked } from "@convex/userApiKeys";
 
 // Get unique providers from models_definitions
 const MODEL_PROVIDERS = [
