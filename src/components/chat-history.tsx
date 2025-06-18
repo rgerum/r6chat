@@ -26,12 +26,18 @@ import {
   SquareIcon,
   XIcon,
 } from "lucide-react";
+import { Copy, GitBranch, RefreshCw } from "lucide-react";
 import { IconType } from "@icons-pack/react-simple-icons";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ShareButton } from "@/components/share-button";
 import { EmptyState } from "@/components/empty-state";
 import { UploadButton } from "@/components/upload-button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function ChatHistoryWrapper(props: {
   chatId: Id<"chats"> | undefined;
@@ -445,7 +451,7 @@ function ChatMessage({ message }: { message: Message }) {
                 <div
                   key={`${message.id}-${i}`}
                   className={cn(
-                    "mb-8 prose",
+                    "group mb-8 relative prose",
                     message.role === "user"
                       ? "bg-pink-200 rounded-md p-3 ml-auto max-w-80 w-fit"
                       : "min-h-8", // min height to make the height not jump after the spiner disappear
@@ -535,6 +541,61 @@ function ChatMessage({ message }: { message: Message }) {
                           )}
                         </>
                       ))}
+                    </div>
+                  )}
+                  {message.role === "assistant" && (
+                    <div className="absolute bottom-3 translate-y-full flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 p-1 text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                              navigator.clipboard.writeText(part.text || "");
+                            }}
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Copy message</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 p-1 text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                              // TODO: Implement branch functionality
+                              console.log("Branch from message", message.id);
+                            }}
+                          >
+                            <GitBranch className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Branch from here</TooltipContent>
+                      </Tooltip>
+
+                      {message.role === "assistant" && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 p-1 text-muted-foreground hover:text-foreground"
+                              onClick={() => {
+                                // TODO: Implement retry functionality
+                                console.log("Retry message", message.id);
+                              }}
+                            >
+                              <RefreshCw className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Regenerate response</TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
                   )}
                 </div>
