@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { models_definitions } from "@/lib/model-definitions";
+import { Id } from "@convex/_generated/dataModel";
 
 // Get unique providers from models_definitions
 const MODEL_PROVIDERS = [
@@ -38,19 +39,6 @@ const MODEL_PROVIDERS = [
 export default function ProfilePage() {
   const { user } = useUser();
   const apiKeys = useQuery(api.userApiKeys.getUserApiKeys);
-
-  const upsertKey = useMutation(api.userApiKeys.upsertApiKey);
-  const deleteKey = useMutation(api.userApiKeys.deleteApiKey);
-
-  const handleDeleteKey = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this API key?")) {
-      try {
-        await deleteKey({ id: id as any });
-      } catch (error) {
-        console.error("Failed to delete API key:", error);
-      }
-    }
-  };
 
   const { signOut } = useClerk();
   const { getToken } = useAuth();
@@ -170,103 +158,125 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {MODEL_PROVIDERS.map((provider) => {
-              const existingKey = apiKeys?.find(
-                (k) => k.modelProvider === provider.id,
-              );
-              const [isEditing, setIsEditing] = useState(false);
-              const [apiKey, setApiKey] = useState(existingKey?.apiKey || "");
-
-              const handleSave = async (e: React.FormEvent) => {
-                e.preventDefault();
-                if (!apiKey.trim()) return;
-
-                try {
-                  await upsertKey({
-                    modelProvider: provider.id,
-                    apiKey: apiKey.trim(),
-                  });
-                  setIsEditing(false);
-                } catch (error) {
-                  console.error("Failed to save API key:", error);
-                }
-              };
-
-              return (
-                <div key={provider.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium capitalize">{provider.name}</h3>
-                    {!isEditing && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsEditing(true)}
-                      >
-                        {existingKey ? "Edit" : "Add Key"}
-                      </Button>
-                    )}
-                  </div>
-
-                  {isEditing ? (
-                    <form onSubmit={handleSave} className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="password"
-                          value={apiKey}
-                          onChange={(e) => setApiKey(e.target.value)}
-                          placeholder={`Enter your ${provider.name} API key`}
-                          className="flex-1"
-                        />
-                        <Button type="submit">Save</Button>
-                        <Button
-                          variant="outline"
-                          type="button"
-                          onClick={() => {
-                            setApiKey(existingKey?.apiKey || "");
-                            setIsEditing(false);
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </form>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <div className="text-muted-foreground">
-                        {existingKey ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-green-500">
-                              ••••••••••••••••
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              Updated{" "}
-                              {new Date(
-                                existingKey.updatedAt,
-                              ).toLocaleDateString()}
-                            </span>
-                          </div>
-                        ) : (
-                          <span>No API key added</span>
-                        )}
-                      </div>
-                      {existingKey && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDeleteKey(existingKey._id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {apiKeys &&
+              MODEL_PROVIDERS.map((provider) => (
+                <ProviderKey
+                  key={provider.id}
+                  provider={provider}
+                  apiKeys={apiKeys}
+                />
+              ))}
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function ProviderKey({
+  provider,
+  apiKeys,
+}: {
+  apiKeys: {
+    modelProvider: string;
+    apiKey: string;
+    updatedAt: number;
+    _id: Id<"userApiKeys">;
+  }[];
+  provider: { id: string; name: string };
+}) {
+  const upsertKey = useMutation(api.userApiKeys.upsertApiKey);
+  const deleteKey = useMutation(api.userApiKeys.deleteApiKey);
+
+  const handleDeleteKey = async (id: Id<"userApiKeys">) => {
+    if (window.confirm("Are you sure you want to delete this API key?")) {
+      try {
+        await deleteKey({ id: id });
+      } catch (error) {
+        console.error("Failed to delete API key:", error);
+      }
+    }
+  };
+
+  const existingKey = apiKeys?.find((k) => k.modelProvider === provider.id);
+  const [isEditing, setIsEditing] = useState(false);
+  const [apiKey, setApiKey] = useState(existingKey?.apiKey || "");
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!apiKey.trim()) return;
+
+    try {
+      await upsertKey({
+        modelProvider: provider.id,
+        apiKey: apiKey.trim(),
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to save API key:", error);
+    }
+  };
+
+  return (
+    <div key={provider.id} className="border rounded-lg p-4">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-medium capitalize">{provider.name}</h3>
+        {!isEditing && (
+          <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+            {existingKey ? "Edit" : "Add Key"}
+          </Button>
+        )}
+      </div>
+
+      {isEditing ? (
+        <form onSubmit={handleSave} className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder={`Enter your ${provider.name} API key`}
+              className="flex-1"
+            />
+            <Button type="submit">Save</Button>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => {
+                setApiKey(existingKey?.apiKey || "");
+                setIsEditing(false);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <div className="flex items-center justify-between">
+          <div className="text-muted-foreground">
+            {existingKey ? (
+              <div className="flex items-center gap-2">
+                <span className="text-green-500">••••••••••••••••</span>
+                <span className="text-xs text-muted-foreground">
+                  Updated {new Date(existingKey.updatedAt).toLocaleDateString()}
+                </span>
+              </div>
+            ) : (
+              <span>No API key added</span>
+            )}
+          </div>
+          {existingKey && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={() => handleDeleteKey(existingKey._id)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

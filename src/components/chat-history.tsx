@@ -134,7 +134,7 @@ function ChatText(props: {
       router.push(`/chat/${id}?new`);
     }
     void triggerAddChat();
-  }, [props.chatId]);
+  }, [props.chatId, addChat, router]);
 
   // Add this state to track scroll position
   const [isAtBottom, setIsAtBottom] = React.useState(true);
@@ -158,20 +158,16 @@ function ChatText(props: {
     });
   }, [props.chatId]);
 
+  const all_message_content = messages
+    .map((m) => m.parts.map((p) => (p.type === "text" ? p.text : "")).join(""))
+    .join("");
   React.useEffect(() => {
     if (!isAtBottom) return;
     window.scrollTo({
       top: document.body.scrollHeight,
       //behavior: "smooth", // Optional: adds smooth scrolling
     });
-  }, [
-    messages
-      .map((m) =>
-        m.parts.map((p) => (p.type === "text" ? p.text : "")).join(""),
-      )
-      .join(""),
-    myStatus,
-  ]);
+  }, [all_message_content, myStatus, isAtBottom]);
 
   function handleStop(e: { preventDefault: () => void }) {
     e.preventDefault();
@@ -408,11 +404,13 @@ function ChatText(props: {
                       <div className="flex items-center gap-2">
                         {isImage ? (
                           <div className="w-6 h-6 flex-shrink-0 rounded overflow-hidden">
-                            <img
-                              src={URL.createObjectURL(file)}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
+                            <picture>
+                              <img
+                                src={URL.createObjectURL(file)}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            </picture>
                           </div>
                         ) : (
                           <FileText className="h-5 w-6 text-muted-foreground flex-shrink-0" />
@@ -590,12 +588,14 @@ function ChatMessage({
                 >
                   <span className="text-sm text-pink-800">
                     {part.mimeType?.startsWith("image/") && (
-                      <img
-                        src={`data:${part.mimeType};base64,${part.data}`}
-                        alt="Generated content"
-                        className="max-w-full h-auto rounded-md"
-                        style={{ maxHeight: "400px" }}
-                      />
+                      <picture>
+                        <img
+                          src={`data:${part.mimeType};base64,${part.data}`}
+                          alt="Generated content"
+                          className="max-w-full h-auto rounded-md"
+                          style={{ maxHeight: "400px" }}
+                        />
+                      </picture>
                     )}
                   </span>
                 </div>
@@ -679,10 +679,13 @@ function ChatMessage({
                       {message.experimental_attachments.map((a, i) => (
                         <React.Fragment key={i}>
                           {a.contentType?.startsWith("image/") ? (
-                            <img
-                              src={a.url}
-                              style={{ margin: 0, maxHeight: "300px" }}
-                            />
+                            <picture style={{ margin: 0 }}>
+                              <img
+                                src={a.url}
+                                style={{ margin: 0, maxHeight: "300px" }}
+                                alt="Generated content"
+                              />
+                            </picture>
                           ) : a.contentType === "application/pdf" ? (
                             <a
                               href={a.url}

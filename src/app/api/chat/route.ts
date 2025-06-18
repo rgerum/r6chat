@@ -3,7 +3,6 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 
 export const maxDuration = 30;
 
-import { openai } from "@ai-sdk/openai";
 import {
   appendResponseMessages,
   FilePart,
@@ -49,11 +48,11 @@ function getText(
 }
 
 export async function POST(req: Request) {
-  const { messages, id, model, websearch, retry_options } = await req.json();
+  const { messages, id, model, retry_options } = await req.json();
   console.log("retry_options", retry_options);
 
   if (retry_options.id) {
-    for (let i in messages) {
+    for (const i in messages) {
       if (messages[i].id === retry_options.id) {
         if (messages[i].role === "user") {
           messages.splice(i + 1);
@@ -212,7 +211,6 @@ import { getModelInstance, getModelProvider } from "@/lib/model-instance";
 import { after } from "next/server";
 import { z } from "zod";
 import { getModelProperties } from "@/lib/model-definitions";
-import { google } from "@ai-sdk/google";
 
 export async function saveTitle({
   id,
@@ -238,7 +236,6 @@ export async function saveChat({
   id,
   messages,
   token,
-  model,
 }: {
   id: string; // chats;
   messages: Message[];
