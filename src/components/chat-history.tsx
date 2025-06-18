@@ -24,6 +24,7 @@ import {
   AlertCircle,
   ArrowUpIcon,
   CheckIcon,
+  ChevronDown,
   CopyIcon,
   FileText,
   GlobeIcon,
@@ -257,6 +258,13 @@ function ChatText(props: {
     handleSubmit();
   }
 
+  function doScrollToBottom() {
+    window.scrollTo({
+      top: document.body.scrollHeight,
+    });
+    setIsAtBottom(true);
+  }
+
   return (
     <div className="flex flex-col w-full max-w-lg py-24 px-4 mx-auto stretch">
       {props.writeable ? (
@@ -319,6 +327,16 @@ function ChatText(props: {
           }
           className="p-4 pb-2 -ml-3 fixed bottom-0 w-full max-w-lg border-10 border-b-0 border-pink-100 rounded-t-md bg-pink-50"
         >
+          <button
+            className={cn(
+              "flex items-center transition delay-1000 gap-2 absolute -top-6 left-1/2 -translate-x-1/2 -translate-y-full text-xs bg-pink-100 px-4 py-2 rounded-full",
+              isAtBottom && "pointer-events-none delay-0 opacity-0",
+            )}
+            onClick={doScrollToBottom}
+          >
+            Scroll to bottom <ChevronDown size={16} />
+          </button>
+
           <div className="flex flex-grow flex-row items-start mb-2">
             <AutoResizeTextarea
               name="input"
