@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getUserIdOrThrow } from "./user";
+import { getUserId, getUserIdOrThrow } from "./user";
 
 export const getUserApiKeys = query({
   handler: async (ctx) => {
@@ -17,7 +17,7 @@ export const getUserApiKeys = query({
 
 export const getUserApiKeysMasked = query({
   handler: async (ctx) => {
-    const userId = await getUserIdOrThrow(ctx);
+    const userId = await getUserId(ctx);
     if (!userId) {
       return [];
     }

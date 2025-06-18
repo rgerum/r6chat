@@ -302,6 +302,7 @@ function ChatText(props: {
           chatId={props.chatId}
           message={message}
           retryMessage={retryMessage}
+          writeable={props.writeable}
         />
       ))}
       {myStatus === "submitted" && <ChatSpinner />}
@@ -312,13 +313,15 @@ function ChatText(props: {
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>
               An error occurred while sending your message. Please try again.{" "}
-              <button
-                className={"font-bold flex gap-2 items-center cursor-pointer"}
-                onClick={() => reload()}
-              >
-                <RefreshCw size={16} />
-                retry
-              </button>
+              {props.writeable && (
+                <button
+                  className={"font-bold flex gap-2 items-center cursor-pointer"}
+                  onClick={() => reload()}
+                >
+                  <RefreshCw size={16} />
+                  retry
+                </button>
+              )}
             </AlertDescription>
           </Alert>
         </div>
@@ -588,10 +591,12 @@ function ChatMessage({
   chatId,
   message,
   retryMessage,
+  writeable,
 }: {
   chatId: Id<"chats">;
   message: Message;
   retryMessage: (id: string) => void;
+  writeable: boolean;
 }) {
   const branchChat = useBranchMutation();
   if (
@@ -754,23 +759,25 @@ function ChatMessage({
                         <TooltipContent>Copy message</TooltipContent>
                       </Tooltip>
 
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 p-1 text-muted-foreground hover:text-foreground"
-                            onClick={() => {
-                              void branchChat(chatId, message.id);
-                            }}
-                          >
-                            <GitBranch className="h-3.5 w-3.5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Branch from here</TooltipContent>
-                      </Tooltip>
+                      {writeable && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 p-1 text-muted-foreground hover:text-foreground"
+                              onClick={() => {
+                                void branchChat(chatId, message.id);
+                              }}
+                            >
+                              <GitBranch className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Branch from here</TooltipContent>
+                        </Tooltip>
+                      )}
 
-                      {message.role === "assistant" && (
+                      {message.role === "assistant" && writeable && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
