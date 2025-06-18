@@ -1,6 +1,33 @@
 import { mutation, query } from "./_generated/server";
 import { getUserId, getUserIdOrThrow } from "./user";
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
+
+export const getChatsPaginated = query({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    const userId = await getUserId(ctx);
+    if (!userId) {
+      throw new Error("Not logged in");
+    }
+    const results = await ctx.db
+      .query("chats")
+      .withIndex("by_user_lastUpdate", (q) => q.eq("userId", userId))
+      .order("desc")
+      .paginate(args.paginationOpts);
+    return {
+      ...results,
+      page: results.page.map((chat) => ({
+        _id: chat._id,
+        title: chat.title,
+        lastUpdate: chat.lastUpdate,
+        pinned: chat.pinned,
+        branched: chat.branched,
+        message_count: chat.messages.length,
+      })),
+    };
+  },
+});
 
 export const getChats = query({
   args: {},

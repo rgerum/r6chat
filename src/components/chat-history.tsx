@@ -752,10 +752,6 @@ function ChatMessage({
                           <TooltipContent>Regenerate response</TooltipContent>
                         </Tooltip>
                       )}
-
-                      <span className="text-xs text-muted-foreground ml-1">
-                        {message.model}
-                      </span>
                     </div>
                   )}
                 </div>

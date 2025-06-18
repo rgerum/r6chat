@@ -11,11 +11,11 @@ import {
 } from "@clerk/nextjs";
 import Link from "next/link";
 import { Id } from "@convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { cn } from "@/lib/utils";
-import React from "react";
-import { useRouter } from "next/navigation";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { PinIcon, PinOffIcon, XIcon, UserIcon, GitBranch } from "lucide-react";
 import {
   Tooltip,
@@ -29,6 +29,7 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "@/components/ui/sidebar";
+import { getChatsPaginated } from "@convex/chats";
 
 // Update the groupChats function
 function groupChats(chats: Chat[]) {
@@ -48,7 +49,7 @@ function groupChats(chats: Chat[]) {
   chats.forEach((chat) => {
     // Skip if lastUpdate is not set
     if (!chat.lastUpdate) return;
-    if (chat.messages.length === 0) return;
+    if (chat.message_count === 0) return;
 
     if (chat.pinned) {
       groupedChats.Pinned.push(chat);
@@ -221,18 +222,56 @@ function ButtonWithTooltip(props: {
 type Chat = NonNullable<Awaited<ReturnType<typeof useChats>>>[number];
 
 function useChats() {
-  return useQuery(api.chats.getChats);
+  //const chats = useChats();
+  const {
+    results: chats,
+    status,
+    loadMore,
+  } = usePaginatedQuery(
+    api.chats.getChatsPaginated,
+    {},
+    { initialNumItems: 5 },
+  );
+  return chats;
+  //return useQuery(api.chats.getChats);
 }
 
 function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
-  const chats = useChats();
+  const loadMoreRef = useRef<HTMLButtonElement>(null);
+  const {
+    results: chats,
+    status,
+    loadMore,
+  } = usePaginatedQuery(
+    api.chats.getChatsPaginated,
+    {},
+    { initialNumItems: 10 },
+  );
+
+  // Auto-load more when the button comes into view
+  useEffect(() => {
+    if (!loadMoreRef.current || status !== "CanLoadMore") return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMore(5);
+        }
+      },
+      { threshold: 0.1, rootMargin: "50px" },
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [status, loadMore]);
+
   if (!chats) return null;
 
   const groupedChats = groupChats(
     chats, //.filter((chat) => chat.messages.length > 0),
   );
   return (
-    <ul>
+    <div>
       {Object.entries(groupedChats).map(([category, chats], chatId) => (
         <React.Fragment key={chatId}>
           {chats.length > 0 && (
@@ -256,7 +295,13 @@ function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
           )}
         </React.Fragment>
       ))}
-    </ul>
+      <button
+        ref={loadMoreRef}
+        onClick={() => loadMore(5)}
+        disabled={status !== "CanLoadMore"}
+        className="h-4 w-full"
+      />
+    </div>
   );
 }
 
