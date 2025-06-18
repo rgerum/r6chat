@@ -372,6 +372,9 @@ function ChatText(props: {
                 <Link className={"font-bold"} href="/profile">
                   Profile
                 </Link>
+                {modelDefinition.image_generation
+                  ? " For image generation you need an provider key, open router does not work."
+                  : ""}
               </div>
             )}
             <div id="chat-input-description" className="sr-only">
