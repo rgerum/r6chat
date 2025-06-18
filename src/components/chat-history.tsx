@@ -91,6 +91,8 @@ function ChatText(props: {
   const [attachFile, setAttachFile] = React.useState<FileList | null>(null);
   const [webSearch, setWebSearch] = React.useState(false);
   const modelDefinition = getModelProperties(model);
+  // make this an object, so I can later change this entry in the body
+  const retry_options = { id: "" as null | string };
   const {
     reload,
     messages,
@@ -109,6 +111,7 @@ function ChatText(props: {
     body: {
       model,
       websearch: webSearch && modelDefinition.websearch,
+      retry_options: retry_options,
     },
   });
   const [statusImageGeneration, setStatusImageGeneration] = React.useState<
@@ -235,6 +238,24 @@ function ChatText(props: {
     } else handleSubmit(e);
   }
   console.log(messages);
+  function retryMessage(id: string) {
+    retry_options.id = id;
+    // remove all messages up to the retry id
+    const new_messages: Message[] = [];
+    for (let i in messages) {
+      if (messages[i].id === id) {
+        if (messages[i].role === "user") new_messages.push(messages[i]);
+        break;
+      }
+      new_messages.push(messages[i]);
+    }
+    // set the messages and use the last user message as the "new input"
+    const last_message = new_messages.pop();
+    if (last_message) void append(last_message);
+    setMessages(new_messages);
+
+    handleSubmit();
+  }
 
   return (
     <div className="flex flex-col w-full max-w-lg py-24 px-4 mx-auto stretch">
@@ -262,7 +283,12 @@ function ChatText(props: {
         />
       )}
       {messages.map((message) => (
-        <ChatMessage key={message.id} chatId={props.chatId} message={message} />
+        <ChatMessage
+          key={message.id}
+          chatId={props.chatId}
+          message={message}
+          retryMessage={retryMessage}
+        />
       ))}
       {myStatus === "submitted" && <ChatSpinner />}
       {myStatus === "error" && (
@@ -271,8 +297,14 @@ function ChatText(props: {
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>
-              An error occurred while sending your message. Please try
-              again.{" "}
+              An error occurred while sending your message. Please try again.{" "}
+              <button
+                className={"font-bold flex gap-2 items-center cursor-pointer"}
+                onClick={() => reload()}
+              >
+                <RefreshCw size={16} />
+                retry
+              </button>
             </AlertDescription>
           </Alert>
         </div>
@@ -516,9 +548,11 @@ function useBranchMutation() {
 function ChatMessage({
   chatId,
   message,
+  retryMessage,
 }: {
   chatId: Id<"chats">;
   message: Message;
+  retryMessage: (id: string) => void;
 }) {
   if (
     message.parts &&
@@ -690,7 +724,7 @@ function ChatMessage({
                               size="icon"
                               className="h-6 w-6 p-1 text-muted-foreground hover:text-foreground"
                               onClick={() => {
-                                // TODO: Implement retry functionality
+                                retryMessage(message.id);
                                 console.log("Retry message", message.id);
                               }}
                             >

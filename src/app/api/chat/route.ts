@@ -49,8 +49,23 @@ function getText(
 }
 
 export async function POST(req: Request) {
-  const { messages, id, model, websearch } = await req.json();
+  const { messages, id, model, websearch, retry_options } = await req.json();
+  console.log("retry_options", retry_options);
 
+  if (retry_options.id) {
+    for (let i in messages) {
+      if (messages[i].id === retry_options.id) {
+        if (messages[i].role === "user") {
+          messages.splice(i + 1);
+        } else {
+          messages.splice(i);
+        }
+        break;
+      }
+    }
+    console.log("retry_options", messages);
+  }
+  //return null;
   const token = await getAuthToken();
 
   console.log("model", model);
