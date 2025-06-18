@@ -1,10 +1,6 @@
 "use client";
 import ChatDashboard from "@/components/chat-dashboard";
-import {
-  useRouter,
-  useSearchParams,
-  useSelectedLayoutSegment,
-} from "next/navigation";
+import { useRouter, useSelectedLayoutSegment } from "next/navigation";
 import { Id } from "@convex/_generated/dataModel";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { ChatHistoryWrapper } from "@/components/chat-history";
@@ -41,7 +37,6 @@ function useKeyboardShortcuts() {
 export default function ChatLayout() {
   const chatId = useSelectedLayoutSegment() as Id<"chats"> | undefined;
   useKeyboardShortcuts();
-  const isNewChat = useSearchParams().get("new") !== null;
   return (
     <>
       <Authenticated>
@@ -49,12 +44,14 @@ export default function ChatLayout() {
           <AppSidebar chatId={chatId} />
           <SidebarTrigger className="fixed left-3 top-4.5 z-50" />
           <main className="w-full">
-            <ChatDashboard chatId={chatId} isNewChat={!!isNewChat} />
+            <React.Suspense fallback={null}>
+              <ChatDashboard chatId={chatId} />
+            </React.Suspense>
           </main>
         </SidebarProvider>
       </Authenticated>
       <Unauthenticated>
-        <ChatHistoryWrapper chatId={chatId} isNewChat={!!isNewChat} />
+        <ChatHistoryWrapper chatId={chatId} isNewChat={false} />
       </Unauthenticated>
     </>
   );
