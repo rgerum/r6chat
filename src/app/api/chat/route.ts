@@ -117,6 +117,19 @@ export async function POST(req: Request) {
         }),
       });
     },
+    tools: {
+      // server-side tool with execute function:
+      getWebsiteContent: {
+        description: "search the web",
+        parameters: z.object({ url: z.string() }),
+        execute: async (args: { url: string }) => {
+          const response = await fetch(args.url);
+          const text = await response.text();
+          return text;
+        },
+      },
+    },
+    maxSteps: 2,
   });
 
   return result.toDataStreamResponse();
@@ -128,6 +141,7 @@ import { Id } from "@convex/_generated/dataModel";
 import { getAuthToken } from "@/app/auth";
 import { getModelInstance, getModelProvider } from "@/lib/model-instance";
 import { after } from "next/server";
+import { z } from "zod";
 
 export async function saveTitle({
   id,

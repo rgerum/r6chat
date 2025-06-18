@@ -22,7 +22,9 @@ import {
   ArrowUpIcon,
   CheckIcon,
   CopyIcon,
+  FileText,
   SquareIcon,
+  XIcon,
 } from "lucide-react";
 import { IconType } from "@icons-pack/react-simple-icons";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -76,6 +78,7 @@ function ChatText(props: {
   const {
     messages,
     input,
+    setInput,
     handleInputChange,
     handleSubmit,
     status,
@@ -105,6 +108,7 @@ function ChatText(props: {
 
   // Add this state to track scroll position
   const [isAtBottom, setIsAtBottom] = React.useState(true);
+  const [attachFile, setAttachFile] = React.useState<FileList | null>(null);
 
   // Update the scroll effect
   React.useEffect(() => {
@@ -144,6 +148,22 @@ function ChatText(props: {
     e.preventDefault();
     stop();
   }
+  function handleSubmitWrapper(e: { preventDefault: () => void }) {
+    e.preventDefault();
+    if (attachFile) {
+      append(
+        {
+          role: "user",
+          content: input,
+        },
+        {
+          experimental_attachments: attachFile,
+        },
+      );
+      setInput("");
+      setAttachFile(null);
+    } else handleSubmit(e);
+  }
   console.log(messages);
 
   return (
@@ -181,7 +201,7 @@ function ChatText(props: {
           onSubmit={
             status === "submitted" || status === "streaming"
               ? handleStop
-              : handleSubmit
+              : handleSubmitWrapper
           }
           className="p-4 pb-2 -ml-3 fixed bottom-0 w-full max-w-lg border-10 border-b-0 border-pink-100 rounded-t-md bg-pink-50"
         >
@@ -205,21 +225,19 @@ function ChatText(props: {
             <SelectModel model={model} setModel={setModel} />
             <UploadButton
               chatId={props.chatId}
-              onUpload={(image: string) => {
-                append(
-                  {
-                    role: "user",
-                    content: "Describe the image in detail.", // Just a simple string
-                  },
-                  {
-                    experimental_attachments: [
-                      {
-                        contentType: "image/jpeg",
-                        url: image,
-                      },
-                    ],
-                  },
-                );
+              onUpload={(file: File) => {
+                if (file) {
+                  const dataTransfer = new DataTransfer();
+                  // Add existing files if any
+                  if (attachFile) {
+                    for (let i = 0; i < attachFile.length; i++) {
+                      dataTransfer.items.add(attachFile[i]);
+                    }
+                  }
+                  // Add the new file
+                  dataTransfer.items.add(file);
+                  setAttachFile(dataTransfer.files);
+                }
               }}
             />
             <Button type="submit" className={"ml-auto"}>
@@ -230,6 +248,61 @@ function ChatText(props: {
               )}
             </Button>
           </div>
+          {attachFile && attachFile.length > 0 && (
+            <div className="mt-2 space-y-2">
+              <div className="text-xs text-muted-foreground">
+                Attached files:
+              </div>
+              <div className="space-y-0">
+                {Array.from(attachFile).map((file, index) => {
+                  const isImage = file.type.startsWith("image/");
+
+                  return (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between bg-muted/50 rounded py-1.5 text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        {isImage ? (
+                          <div className="w-6 h-6 flex-shrink-0 rounded overflow-hidden">
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <FileText className="h-5 w-6 text-muted-foreground flex-shrink-0" />
+                        )}
+                        <span className="truncate max-w-[180px]">
+                          {file.name}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          const dataTransfer = new DataTransfer();
+                          Array.from(attachFile).forEach((f, i) => {
+                            if (i !== index) dataTransfer.items.add(f);
+                          });
+                          setAttachFile(
+                            dataTransfer.files.length > 0
+                              ? dataTransfer.files
+                              : null,
+                          );
+                        }}
+                        className="text-muted-foreground hover:text-foreground ml-2"
+                      >
+                        <XIcon className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </form>
       )}
     </div>
@@ -245,7 +318,7 @@ function SelectModel({
 }) {
   return (
     <Select value={model} onValueChange={setModel}>
-      <SelectTrigger className="-ml-4 w-fit border-0 shadow-none hover:bg-pink-300">
+      <SelectTrigger className="-ml-3 w-fit border-0 shadow-none hover:bg-pink-300">
         <SelectValue placeholder="Select a model" />
       </SelectTrigger>
       <SelectContent>
@@ -431,14 +504,34 @@ function ChatMessage({ message }: { message: Message }) {
                     {part.text}
                   </ReactMarkdown>
                   {message.experimental_attachments && (
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2">
                       {message.experimental_attachments.map((a) => (
                         <>
-                          {a.contentType?.split("/")[0] === "image" && (
+                          {a.contentType?.startsWith("image/") ? (
                             <img
                               src={a.url}
                               style={{ margin: 0, maxHeight: "300px" }}
                             />
+                          ) : a.contentType === "application/pdf" ? (
+                            <a
+                              href={a.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              <FileText className="h-5 w-5 flex-shrink-0" />
+                              <span>View PDF</span>
+                            </a>
+                          ) : (
+                            <a
+                              href={a.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              <FileText className="h-5 w-5 flex-shrink-0" />
+                              <span>View file</span>
+                            </a>
                           )}
                         </>
                       ))}
