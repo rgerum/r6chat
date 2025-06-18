@@ -15,6 +15,23 @@ export const getUserApiKeys = query({
   },
 });
 
+export const getUserApiKeysMasked = query({
+  handler: async (ctx) => {
+    const userId = await getUserIdOrThrow(ctx);
+    if (!userId) {
+      return [];
+    }
+    const keys = await ctx.db
+      .query("userApiKeys")
+      .withIndex("by_user_provider", (q) => q.eq("userId", userId))
+      .collect();
+    return keys.map((key) => ({
+      ...key,
+      apiKey: "********",
+    }));
+  },
+});
+
 export const getApiKey = query({
   args: {
     modelProvider: v.string(),

@@ -27,6 +27,7 @@ import {
   ChevronDown,
   CopyIcon,
   FileText,
+  LockIcon,
   SquareIcon,
   XIcon,
 } from "lucide-react";
@@ -45,6 +46,9 @@ import {
 import remarkGfm from "remark-gfm";
 import { appendResponseMessages } from "ai";
 import { v4 as uuidv4 } from "uuid";
+import Link from "next/link";
+import { getModelProvider } from "@/lib/model-instance";
+import { getUserApiKeysMasked } from "@convex/userApiKeys";
 
 export function ChatHistoryWrapper(props: {
   chatId: Id<"chats"> | undefined;
@@ -87,6 +91,13 @@ function ChatText(props: {
   access_public: boolean;
   newChat: boolean;
 }) {
+  const apiKeys = useQuery(api.userApiKeys.getUserApiKeysMasked);
+  function checkModelKey(model: string) {
+    const provider = getModelProvider(model);
+    return apiKeys?.find(
+      (k) => k.modelProvider === provider || k.modelProvider === "openrouter",
+    );
+  }
   const [model, setModel] = React.useState("gpt-4o-mini");
   const [attachFile, setAttachFile] = React.useState<FileList | null>(null);
   //const [webSearch, setWebSearch] = React.useState(false);
@@ -333,17 +344,27 @@ function ChatText(props: {
           </button>
 
           <div className="flex flex-grow flex-row items-start mb-2">
-            <AutoResizeTextarea
-              name="input"
-              id="chat-input"
-              placeholder="Type your message here..."
-              className="w-full max-h-[200px] resize-none bg-transparent text-base leading-6 text-foreground outline-none placeholder:text-secondary-foreground/60 disabled:opacity-0 overflow-y-auto"
-              aria-label="Message input"
-              aria-describedby="chat-input-description"
-              autoComplete="off"
-              value={input}
-              onChange={handleInputChange}
-            />
+            {checkModelKey(model) ? (
+              <AutoResizeTextarea
+                name="input"
+                id="chat-input"
+                placeholder="Type your message here..."
+                className="w-full max-h-[200px] resize-none bg-transparent text-base leading-6 text-foreground outline-none placeholder:text-secondary-foreground/60 disabled:opacity-0 overflow-y-auto"
+                aria-label="Message input"
+                aria-describedby="chat-input-description"
+                autoComplete="off"
+                value={input}
+                onChange={handleInputChange}
+              />
+            ) : (
+              <div className="flex gap-2 items-center">
+                <LockIcon size={16} /> No key provided for this model. Upload
+                one on your{" "}
+                <Link className={"font-bold"} href="/profile">
+                  Profile
+                </Link>
+              </div>
+            )}
             <div id="chat-input-description" className="sr-only">
               Press Enter to send, Shift + Enter for new line
             </div>
@@ -379,7 +400,11 @@ function ChatText(props: {
                 }
               }}
             />
-            <Button type="submit" className={"ml-auto"}>
+            <Button
+              type="submit"
+              className={"ml-auto"}
+              disabled={!checkModelKey(model)}
+            >
               {myStatus === "ready" || myStatus === "error" ? (
                 <ArrowUpIcon />
               ) : (

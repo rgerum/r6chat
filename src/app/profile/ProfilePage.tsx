@@ -21,10 +21,11 @@ import { toast } from "sonner";
 
 import { models_definitions } from "@/lib/model-definitions";
 import { Id } from "@convex/_generated/dataModel";
+import { getUserApiKeysMasked } from "@convex/userApiKeys";
 
 // Get unique providers from models_definitions
 const MODEL_PROVIDERS = [
-  { id: "openrouter", name: "OpenRouter" },
+  //{ id: "openrouter", name: "OpenRouter" },
   ...Array.from(new Set(models_definitions.map((def) => def.provider))).map(
     (provider) => {
       const def = models_definitions.find((d) => d.provider === provider)!;
@@ -38,7 +39,7 @@ const MODEL_PROVIDERS = [
 
 export default function ProfilePage() {
   const { user } = useUser();
-  const apiKeys = useQuery(api.userApiKeys.getUserApiKeys);
+  const apiKeys = useQuery(api.userApiKeys.getUserApiKeysMasked);
 
   const { signOut } = useClerk();
   const { getToken } = useAuth();
@@ -146,29 +147,36 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Your API Keys</CardTitle>
-          <CardDescription>
-            Manage your API keys for different model providers. If you provide a
-            provider specific API key, it will be used instead of the OpenRouter
-            API key.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {apiKeys &&
-              MODEL_PROVIDERS.map((provider) => (
+      {apiKeys && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Your API Keys</CardTitle>
+            <CardDescription>
+              Manage your API keys for different model providers.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <p>Either provide your own OpenRouter API key:</p>
+              <ProviderKey
+                provider={{ id: "openrouter", name: "OpenRouter" }}
+                apiKeys={apiKeys}
+              />
+              <p>
+                Or a provider-specific API key. If both are provided, the
+                provider-specific API key will be used.
+              </p>
+              {MODEL_PROVIDERS.map((provider) => (
                 <ProviderKey
                   key={provider.id}
                   provider={provider}
                   apiKeys={apiKeys}
                 />
               ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
