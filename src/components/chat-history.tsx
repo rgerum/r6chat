@@ -175,7 +175,7 @@ function ChatText(props: {
   return (
     <div className="flex flex-col w-full max-w-lg py-24 px-4 mx-auto stretch">
       {props.writeable ? (
-        <div className="flex justify-end mb-4 -mt-20 sticky top-4">
+        <div className="flex justify-end mb-4 fixed right-5 top-4 z-50">
           <ShareButton
             chatId={props.chatId}
             access_public={props.access_public}
