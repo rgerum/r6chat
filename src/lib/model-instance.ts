@@ -3,6 +3,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createDeepSeek } from "@ai-sdk/deepseek";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
 export function getModelProvider(model_name: string) {
   for (const definition of models_definitions)
@@ -12,8 +13,17 @@ export function getModelProvider(model_name: string) {
 
 export function getModelInstance(
   model_name: string,
-  args: { apiKey?: string },
+  args: { apiKey?: string } | undefined,
+  argsOpenRouter: { apiKey?: string } | undefined,
 ) {
+  if (!args && !argsOpenRouter) {
+    throw new Error("No API key provided");
+  }
+  if (!args) {
+    const provider = getModelProvider(model_name);
+    const openrouter = createOpenRouter(argsOpenRouter);
+    return openrouter.chat(provider + "/" + model_name);
+  }
   switch (getModelProvider(model_name)) {
     case "openai":
       return createOpenAI(args)(model_name);

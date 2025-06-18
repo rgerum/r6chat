@@ -22,15 +22,18 @@ import { toast } from "sonner";
 import { models_definitions } from "@/lib/model-definitions";
 
 // Get unique providers from models_definitions
-const MODEL_PROVIDERS = Array.from(
-  new Set(models_definitions.map((def) => def.provider)),
-).map((provider) => {
-  const def = models_definitions.find((d) => d.provider === provider)!;
-  return {
-    id: provider,
-    name: def.label,
-  };
-});
+const MODEL_PROVIDERS = [
+  { id: "openrouter", name: "OpenRouter" },
+  ...Array.from(new Set(models_definitions.map((def) => def.provider))).map(
+    (provider) => {
+      const def = models_definitions.find((d) => d.provider === provider)!;
+      return {
+        id: provider,
+        name: def.label,
+      };
+    },
+  ),
+];
 
 export default function ProfilePage() {
   const { user } = useUser();
@@ -180,7 +183,9 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle>Your API Keys</CardTitle>
           <CardDescription>
-            Manage your API keys for different model providers
+            Manage your API keys for different model providers. If you provide a
+            provider specific API key, it will be used instead of the OpenRouter
+            API key.
           </CardDescription>
         </CardHeader>
         <CardContent>

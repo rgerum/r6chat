@@ -81,7 +81,13 @@ export async function POST(req: Request) {
     { modelProvider: provider },
     { token },
   );
-  if (!apiKey) return new Response("No key provided", { status: 401 });
+  const apiKey_openrouter = await fetchQuery(
+    api.userApiKeys.getApiKey,
+    { modelProvider: "openrouter" },
+    { token },
+  );
+  if (!apiKey && !apiKey_openrouter)
+    return new Response("No key provided", { status: 401 });
 
   const title = await fetchQuery(
     api.chats.getChatTitle,
@@ -94,7 +100,11 @@ export async function POST(req: Request) {
   );
 
   const modelDefinition = getModelProperties(model);
-  const modelInstance = getModelInstance(model, { apiKey });
+  const modelInstance = getModelInstance(
+    model,
+    apiKey ? { apiKey } : undefined,
+    apiKey_openrouter ? { apiKey: apiKey_openrouter } : undefined,
+  );
   if (!modelInstance) throw new Error("model not found");
 
   // trigger the response now but await it later
