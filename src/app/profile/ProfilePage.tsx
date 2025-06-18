@@ -14,7 +14,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useUser, useClerk, useAuth } from "@clerk/nextjs";
 import { useState } from "react";
-import { Trash2, Plus, ArrowLeft, LogOut, UserX } from "lucide-react";
+import { Trash2, ArrowLeft, LogOut, UserX } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -38,29 +38,9 @@ const MODEL_PROVIDERS = [
 export default function ProfilePage() {
   const { user } = useUser();
   const apiKeys = useQuery(api.userApiKeys.getUserApiKeys);
-  const [selectedProvider, setSelectedProvider] = useState("");
-  const [newApiKey, setNewApiKey] = useState("");
-  const [isAdding, setIsAdding] = useState(false);
 
   const upsertKey = useMutation(api.userApiKeys.upsertApiKey);
   const deleteKey = useMutation(api.userApiKeys.deleteApiKey);
-
-  const handleAddKey = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedProvider || !newApiKey.trim()) return;
-
-    try {
-      await upsertKey({
-        modelProvider: selectedProvider,
-        apiKey: newApiKey.trim(),
-      });
-      setNewApiKey("");
-      setSelectedProvider("");
-      setIsAdding(false);
-    } catch (error) {
-      console.error("Failed to save API key:", error);
-    }
-  };
 
   const handleDeleteKey = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this API key?")) {

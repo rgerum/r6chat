@@ -27,7 +27,6 @@ import {
   ChevronDown,
   CopyIcon,
   FileText,
-  GlobeIcon,
   SquareIcon,
   XIcon,
 } from "lucide-react";
@@ -90,7 +89,7 @@ function ChatText(props: {
 }) {
   const [model, setModel] = React.useState("gpt-4o-mini");
   const [attachFile, setAttachFile] = React.useState<FileList | null>(null);
-  const [webSearch, setWebSearch] = React.useState(false);
+  //const [webSearch, setWebSearch] = React.useState(false);
   const modelDefinition = getModelProperties(model);
   // make this an object, so I can later change this entry in the body
   const retry_options = { id: "" as null | string };
@@ -111,7 +110,7 @@ function ChatText(props: {
     sendExtraMessageFields: true,
     body: {
       model,
-      websearch: webSearch && modelDefinition.websearch,
+      //websearch: webSearch && modelDefinition.websearch,
       retry_options: retry_options,
     },
   });
@@ -243,7 +242,7 @@ function ChatText(props: {
     retry_options.id = id;
     // remove all messages up to the retry id
     const new_messages: Message[] = [];
-    for (let i in messages) {
+    for (const i in messages) {
       if (messages[i].id === id) {
         if (messages[i].role === "user") new_messages.push(messages[i]);
         break;
@@ -513,7 +512,6 @@ function AutoResizeTextarea(
       onKeyDown={(e) => {
         if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
-          // @ts-ignore - handleSubmit is from the parent form
           const form = e.currentTarget.form;
           if (form) {
             const submitEvent = new Event("submit", {
@@ -572,13 +570,13 @@ function ChatMessage({
   message: Message;
   retryMessage: (id: string) => void;
 }) {
+  const branchChat = useBranchMutation();
   if (
     message.parts &&
     message.parts.length === 1 &&
     message.parts[0].type === "step-start"
   )
     return <ChatSpinner />;
-  const branchChat = useBranchMutation();
   return (
     <>
       {message.parts &&
@@ -616,7 +614,7 @@ function ChatMessage({
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                      pre: ({ node, ref, className, children, ...props }) => {
+                      pre: ({ ref, className, children, ...props }) => {
                         const firstChild = React.Children.toArray(children)[0];
 
                         if (
@@ -630,13 +628,33 @@ function ChatMessage({
                             </pre>
                           );
                         }
+                        // @ts-expect-error ts does not know the of firstChild.props
                         const className2 = firstChild.props.className as string;
                         const content = String(
+                          // @ts-expect-error ts does not know the of firstChild.props
                           firstChild.props.children as string,
                         );
 
                         const match = /language-(\w+)/.exec(className2 || "");
-                        return match ? (
+                        if (!match)
+                          return (
+                            <pre ref={ref} {...props} className={className}>
+                              {children}
+                            </pre>
+                          );
+
+                        const MySyntaxHighlighter = (
+                          // @ts-expect-error I am not sure how to fix the customStyle error. it seems to work currently
+                          <SyntaxHighlighter
+                            {...props}
+                            PreTag="div"
+                            language={match[1]}
+                            customStyle={{ margin: 0 } as React.CSSProperties}
+                          >
+                            {content.replace(/\n$/, "")}
+                          </SyntaxHighlighter>
+                        );
+                        return (
                           <div>
                             <div className="flex items-center justify-between bg-pink-200 rounded-t-md pl-3 py-1 pr-1">
                               <div>{match[1]}</div>
@@ -647,19 +665,9 @@ function ChatMessage({
                               className={"rounded-t-none"}
                               style={{ padding: "0", margin: "0" }}
                             >
-                              <SyntaxHighlighter
-                                {...props}
-                                PreTag="div"
-                                children={content.replace(/\n$/, "")}
-                                language={match[1]}
-                                customStyle={{ margin: 0 }}
-                              />
+                              {MySyntaxHighlighter}
                             </pre>
                           </div>
-                        ) : (
-                          <pre ref={ref} {...props} className={className}>
-                            {children}
-                          </pre>
                         );
                       },
                     }}

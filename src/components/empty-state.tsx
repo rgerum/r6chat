@@ -1,12 +1,6 @@
 // Suggestion item component
 import React, { useState } from "react";
-import {
-  Code,
-  GraduationCap,
-  Newspaper,
-  Sparkles,
-  MessageSquareText,
-} from "lucide-react";
+import { Code, GraduationCap, Newspaper, Sparkles } from "lucide-react";
 
 const SuggestionItem = ({
   text,

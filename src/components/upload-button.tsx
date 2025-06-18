@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ImageIcon, Paperclip } from "lucide-react";
+import { Paperclip } from "lucide-react";
 import { useRef } from "react";
 import { Id } from "@convex/_generated/dataModel";
 

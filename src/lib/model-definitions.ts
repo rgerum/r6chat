@@ -4,7 +4,6 @@ import {
   SiGooglegemini,
   SiOpenai,
 } from "@icons-pack/react-simple-icons";
-import * as React from "react";
 import { SiDeepSeek } from "./icons";
 
 export type ModelDefinition = {

@@ -6,17 +6,16 @@ import {
   SignedOut,
   SignInButton,
   SignUpButton,
-  UserButton,
   useUser,
 } from "@clerk/nextjs";
 import Link from "next/link";
 import { Id } from "@convex/_generated/dataModel";
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { cn } from "@/lib/utils";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { PinIcon, PinOffIcon, XIcon, UserIcon, GitBranch } from "lucide-react";
+import React, { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { PinIcon, PinOffIcon, XIcon, GitBranch } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -29,7 +28,6 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { getChatsPaginated } from "@convex/chats";
 
 // Update the groupChats function
 function groupChats(chats: Chat[]) {
@@ -158,7 +156,7 @@ function ChatLink(props: {
         "group/link w-full relative overflow-hidden py-2 px-3 hover:bg-pink-300 truncate block rounded-md cursor-pointer",
         props.chat._id === props.currentChatId && "bg-pink-300",
       )}
-      onClick={(e) => {
+      onClick={() => {
         router.push(`/chat/${props.chat._id}`);
       }}
     >
@@ -219,22 +217,14 @@ function ButtonWithTooltip(props: {
   );
 }
 
-type Chat = NonNullable<Awaited<ReturnType<typeof useChats>>>[number];
-
-function useChats() {
-  //const chats = useChats();
-  const {
-    results: chats,
-    status,
-    loadMore,
-  } = usePaginatedQuery(
-    api.chats.getChatsPaginated,
-    {},
-    { initialNumItems: 5 },
-  );
-  return chats;
-  //return useQuery(api.chats.getChats);
-}
+type Chat = {
+  _id: Id<"chats">;
+  title: string | undefined;
+  lastUpdate: number | undefined;
+  pinned: boolean | undefined;
+  branched: Id<"chats"> | undefined;
+  message_count: number;
+};
 
 function Chats({ currentChatId }: { currentChatId?: Id<"chats"> }) {
   const loadMoreRef = useRef<HTMLButtonElement>(null);
@@ -365,7 +355,7 @@ export function AppSidebar(props: { chatId: string | undefined }) {
               <SignInButton mode="modal" />
             </Button>
             <p className="text-xs text-center text-muted-foreground">
-              Don't have an account?{" "}
+              {"Don't have an account? "}
               <SignUpButton mode="modal">
                 <button className="text-pink-500 hover:underline">
                   Sign up
