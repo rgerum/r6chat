@@ -38,6 +38,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import remarkGfm from "remark-gfm";
 
 export function ChatHistoryWrapper(props: {
   chatId: Id<"chats"> | undefined;
@@ -474,6 +475,7 @@ function ChatMessage({
                   )}
                 >
                   <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
                     components={{
                       pre: ({ node, ref, className, children, ...props }) => {
                         const firstChild = React.Children.toArray(children)[0];
