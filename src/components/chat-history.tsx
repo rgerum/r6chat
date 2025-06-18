@@ -31,7 +31,10 @@ import { ShareButton } from "@/components/share-button";
 import { EmptyState } from "@/components/empty-state";
 import { UploadButton } from "@/components/upload-button";
 
-export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
+export function ChatHistoryWrapper(props: {
+  chatId: Id<"chats"> | undefined;
+  isNewChat: boolean;
+}) {
   const chatHistory = useQuery(api.chats.getChat, {
     chatId: props.chatId,
   });
@@ -44,7 +47,9 @@ export function ChatHistoryWrapper(props: { chatId: Id<"chats"> | undefined }) {
           : []
       }
       newChat={
-        (chatHistory && chatHistory.messages.length === 0) || !props.chatId
+        (chatHistory && chatHistory.messages.length === 0) ||
+        !props.chatId ||
+        props.isNewChat
       }
       writeable={chatHistory?.writeable ?? true}
       access_public={chatHistory?.access_public ?? false}
@@ -93,7 +98,7 @@ function ChatText(props: {
     if (props.chatId) return;
     async function triggerAddChat() {
       const id = await addChat({});
-      router.push(`/chat/${id}`);
+      router.push(`/chat/${id}?new`);
     }
     void triggerAddChat();
   }, [props.chatId]);

@@ -130,7 +130,7 @@ export const EmptyState = ({
       <h2 className="text-3xl font-semibold">
         {selectedAction
           ? `Here are some ${selectedAction} suggestions`
-          : "How can I help you, Richard?"}
+          : "How can I help you, today?"}
       </h2>
 
       <div className="flex flex-row flex-wrap gap-2.5 text-sm max-sm:justify-evenly">
