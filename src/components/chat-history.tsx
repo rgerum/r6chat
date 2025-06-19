@@ -101,7 +101,9 @@ function ChatText(props: {
     );
   }
   const [model, setModel] = React.useState("gpt-4o-mini");
-  const [attachFile, setAttachFile] = React.useState<FileList | null>(null);
+  const [attachFile, setAttachFile] = React.useState<
+    { name: string; contentType: string; url: string }[] | null
+  >(null);
   //const [webSearch, setWebSearch] = React.useState(false);
   const modelDefinition = getModelProperties(model);
   // make this an object, so I can later change this entry in the body
@@ -397,18 +399,16 @@ function ChatText(props: {
             )*/}
             <UploadButton
               chatId={props.chatId}
-              onUpload={(file: File) => {
+              onUpload={(file: {
+                name: string;
+                contentType: string;
+                url: string;
+              }) => {
                 if (file) {
-                  const dataTransfer = new DataTransfer();
-                  // Add existing files if any
-                  if (attachFile) {
-                    for (let i = 0; i < attachFile.length; i++) {
-                      dataTransfer.items.add(attachFile[i]);
-                    }
-                  }
-                  // Add the new file
-                  dataTransfer.items.add(file);
-                  setAttachFile(dataTransfer.files);
+                  const newAttachFiles = attachFile
+                    ? [...attachFile, file]
+                    : [file];
+                  setAttachFile(newAttachFiles);
                 }
               }}
             />
@@ -431,7 +431,7 @@ function ChatText(props: {
               </div>
               <div className="space-y-0">
                 {Array.from(attachFile).map((file, index) => {
-                  const isImage = file.type.startsWith("image/");
+                  const isImage = file.contentType.startsWith("image/");
 
                   return (
                     <div
@@ -443,7 +443,7 @@ function ChatText(props: {
                           <div className="w-6 h-6 flex-shrink-0 rounded overflow-hidden">
                             <picture>
                               <img
-                                src={URL.createObjectURL(file)}
+                                src={file.url}
                                 alt=""
                                 className="w-full h-full object-cover"
                               />
@@ -461,14 +461,16 @@ function ChatText(props: {
                         onClick={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          const dataTransfer = new DataTransfer();
+                          const dataTransfer: {
+                            name: string;
+                            contentType: string;
+                            url: string;
+                          }[] = [];
                           Array.from(attachFile).forEach((f, i) => {
-                            if (i !== index) dataTransfer.items.add(f);
+                            if (i !== index) dataTransfer.push(f);
                           });
                           setAttachFile(
-                            dataTransfer.files.length > 0
-                              ? dataTransfer.files
-                              : null,
+                            dataTransfer.length > 0 ? dataTransfer : null,
                           );
                         }}
                         className="text-muted-foreground hover:text-foreground ml-2"

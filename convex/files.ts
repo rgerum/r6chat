@@ -2,6 +2,7 @@
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { getUserIdOrThrow } from "./user";
 
 export const generateUploadUrl = mutation({
   handler: async (ctx) => {
@@ -38,5 +39,26 @@ export const sendImage = mutation({
     await ctx.db.patch(args.chatId, {
       lastUpdate: Date.now(),
     });
+  },
+});
+
+export const createAttachment = mutation({
+  args: {
+    storageId: v.id("_storage"),
+    name: v.string(),
+    type: v.string(),
+    chatId: v.id("chats"),
+    messageId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getUserIdOrThrow(ctx);
+    await ctx.db.insert("attachments", {
+      storageId: args.storageId,
+      name: args.name,
+      type: args.type,
+      chatId: args.chatId,
+      messageId: args.messageId,
+    });
+    return ctx.storage.getUrl(args.storageId);
   },
 });

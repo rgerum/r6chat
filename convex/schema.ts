@@ -20,6 +20,14 @@ export default defineSchema({
     .index("by_user_creation_time", ["userId"])
     .index("by_user_lastUpdate", ["userId", "lastUpdate"]),
 
+  attachments: defineTable({
+    storageId: v.id("_storage"),
+    name: v.string(),
+    type: v.string(),
+    chatId: v.id("chats"),
+    messageId: v.string(),
+  }),
+
   userApiKeys: defineTable({
     userId: v.string(),
     modelProvider: v.string(),
